@@ -44,6 +44,16 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/XtreamView.vue'),
   },
   {
+    path: '/xtream/vod/:id',
+    name: 'XtreamVodDetail',
+    component: () => import('@/views/xtream/XtreamVodDetailView.vue'),
+  },
+  {
+    path: '/xtream/series/:id',
+    name: 'XtreamSeriesDetail',
+    component: () => import('@/views/xtream/XtreamSeriesDetailView.vue'),
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/SettingsView.vue'),

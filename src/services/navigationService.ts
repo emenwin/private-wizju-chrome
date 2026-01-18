@@ -79,6 +79,20 @@ export class NavigationService {
   }
 
   /**
+   * Navigate to the Xtream VOD detail page
+   */
+  navigateToXtreamVodDetail(id: string): void {
+    this.router.push({ name: 'XtreamVodDetail', params: { id } })
+  }
+
+  /**
+   * Navigate to the Xtream Series detail page
+   */
+  navigateToXtreamSeriesDetail(id: string): void {
+    this.router.push({ name: 'XtreamSeriesDetail', params: { id } })
+  }
+
+  /**
    * Navigate from a channel to the Media Detail page
    * @param channel Channel information (currently an alias for MediaItem)
    * @param sourceId Optional source ID

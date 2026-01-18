@@ -22,3 +22,16 @@ export const buildXtreamVodUrl = (source: StreamSource, stream: XtreamVodStream)
   const extension = stream.containerExtension || 'mp4'
   return `${baseUrl}/movie/${source.username}/${source.password}/${stream.streamId}.${extension}`
 }
+
+export const buildXtreamSeriesEpisodeUrl = (
+  source: StreamSource,
+  episodeId: number,
+  containerExtension?: string,
+): string => {
+  if (!source.username || !source.password) {
+    throw new Error('Xtream source missing username or password')
+  }
+  const baseUrl = sanitizeBaseUrl(source.url)
+  const extension = containerExtension || 'mp4'
+  return `${baseUrl}/series/${source.username}/${source.password}/${episodeId}.${extension}`
+}

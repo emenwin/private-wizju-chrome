@@ -8,7 +8,7 @@ import {
   XtreamVodStreamsStorageV2,
   XtreamSeriesStorageV2,
 } from '@/services/indexedDb/xtreamStorageV2'
-import { buildXtreamLiveUrl, buildXtreamVodUrl } from '@/services/xtream/xtreamUrlBuilder'
+import { buildXtreamLiveUrl } from '@/services/xtream/xtreamUrlBuilder'
 import type {
   XtreamCategory,
   XtreamCategoryType,
@@ -203,17 +203,17 @@ export const useXtreamView = () => {
     if (!currentSource.value) {
       return
     }
-    if (item.sourceType === 'series') {
-      alert('Series playback is not available yet.')
-      return
-    }
-
     let url = ''
     if (item.sourceType === 'livestream') {
       url = buildXtreamLiveUrl(currentSource.value, item.raw as XtreamLiveStream)
     }
     if (item.sourceType === 'vod') {
-      url = buildXtreamVodUrl(currentSource.value, item.raw as XtreamVodStream)
+      navigationService.navigateToXtreamVodDetail(item.id)
+      return
+    }
+    if (item.sourceType === 'series') {
+      navigationService.navigateToXtreamSeriesDetail(item.id)
+      return
     }
 
     const mediaItem: M3UMediaItem = {

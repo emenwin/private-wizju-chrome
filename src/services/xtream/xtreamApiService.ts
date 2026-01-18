@@ -60,6 +60,33 @@ interface XtreamSeriesResponse {
   tmdb_id?: number
 }
 
+interface XtreamSeriesInfoSeasonResponse {
+  season_number?: number
+  name?: string
+  cover?: string
+  cover_big?: string
+  overview?: string
+  air_date?: string
+  episode_count?: number
+}
+
+interface XtreamSeriesInfoEpisodeResponse {
+  id?: number
+  episode_num?: number
+  title?: string
+  container_extension?: string
+  info?: string
+  custom_sid?: string
+  added?: string
+  direct_source?: string
+}
+
+interface XtreamSeriesInfoResponse {
+  info?: XtreamSeriesResponse
+  seasons?: XtreamSeriesInfoSeasonResponse[]
+  episodes?: Record<string, XtreamSeriesInfoEpisodeResponse[]>
+}
+
 const ACTIONS: Record<XtreamCategoryType, string> = {
   livestream: 'get_live_categories',
   vod: 'get_vod_categories',
@@ -97,6 +124,25 @@ const buildXtreamApiUrl = (
   if (action) {
     url.searchParams.set('action', action)
   }
+  return url.toString()
+}
+
+const buildXtreamApiUrlWithParams = (
+  baseUrl: string,
+  username: string,
+  password: string,
+  action: string,
+  params: Record<string, string | number | undefined>,
+): string => {
+  const url = new URL('/player_api.php', baseUrl)
+  url.searchParams.set('username', username)
+  url.searchParams.set('password', password)
+  url.searchParams.set('action', action)
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      url.searchParams.set(key, String(value))
+    }
+  })
   return url.toString()
 }
 
@@ -161,6 +207,21 @@ export const xtreamApiService = {
       STREAM_ACTIONS.series,
     )
   },
+  fetchSeriesInfo: async (
+    baseUrl: string,
+    username: string,
+    password: string,
+    seriesId: string,
+  ): Promise<XtreamSeriesInfoResponse> => {
+    const url = buildXtreamApiUrlWithParams(baseUrl, username, password, 'get_series_info', {
+      series_id: seriesId,
+    })
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Xtream API request failed: ${response.status} ${response.statusText}`)
+    }
+    return (await response.json()) as XtreamSeriesInfoResponse
+  },
 }
 
 export type {
@@ -168,4 +229,7 @@ export type {
   XtreamLiveStreamResponse,
   XtreamVodStreamResponse,
   XtreamSeriesResponse,
+  XtreamSeriesInfoResponse,
+  XtreamSeriesInfoSeasonResponse,
+  XtreamSeriesInfoEpisodeResponse,
 }
