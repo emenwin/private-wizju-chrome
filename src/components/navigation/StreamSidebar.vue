@@ -86,12 +86,12 @@
             :class="
               cn(
                 'w-full justify-start transition-colors',
-                isActiveSource(playlist.id)
+                isActiveSource(playlist.id, playlist.type)
                   ? 'bg-sidebar-primary text-sidebar-primary-foreground'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent',
               )
             "
-            @click="navigateToLive(playlist.id)"
+            @click="navigateToSource(playlist.id, playlist.type)"
           >
             <PlayCircle class="w-4 h-4 mr-3" />
             <span class="truncate">{{ playlist.title }}</span>
@@ -187,14 +187,23 @@ const playlistItems = computed(() => {
 })
 
 // Check if the source is currently active
-const isActiveSource = (sourceId: string): boolean => {
-  return navigationStore.currentSourceId === sourceId && route.path === '/live'
+const isActiveSource = (sourceId: string, type: string): boolean => {
+  if (navigationStore.currentSourceId !== sourceId) {
+    return false
+  }
+  if (type === 'xtreamcode') {
+    return route.path === '/xtream'
+  }
+  return route.path === '/live'
 }
 
-// Navigate to LiveView when a playlist item is clicked and set the current source in the navigation store
-const navigateToLive = (sourceId: string) => {
-  // Use navigation service for navigation
-  navigationService.navigateToLive(sourceId)
+// Navigate to the correct view for the selected source
+const navigateToSource = (sourceId: string, type: string) => {
+  if (type === 'xtreamcode') {
+    navigationService.navigateToXtream(sourceId)
+  } else {
+    navigationService.navigateToLive(sourceId)
+  }
 }
 
 // Show the add source modal

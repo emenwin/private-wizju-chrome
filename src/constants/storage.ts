@@ -12,7 +12,7 @@ export const INDEXEDDB_CONFIG = {
   /** Database name */
   DB_NAME: 'WizjuIPTVDB',
   /** Database version */
-  DB_VERSION: 1,
+  DB_VERSION: 2,
 } as const
 
 // Export shorthand for convenience
@@ -26,6 +26,16 @@ export const STORE_NAMES = {
   STREAM_SOURCES: 'streamSources',
   /** Media items store (M3U media items) */
   MEDIA_ITEMS: 'm3uMediaItems',
+  /** Xtream categories store */
+  XTREAM_CATEGORIES: 'xtreamCategories',
+  /** Xtream live streams store */
+  XTREAM_LIVE_STREAMS: 'xtreamLiveStreams',
+  /** Xtream VOD streams store */
+  XTREAM_VOD_STREAMS: 'xtreamVodStreams',
+  /** Xtream series store */
+  XTREAM_SERIES: 'xtreamSeries',
+  /** Xtream episodes store */
+  XTREAM_EPISODES: 'xtreamEpisodes',
   /** Favorites store */
   FAVORITES: 'favorites',
   /** Recent watching history store */
@@ -47,6 +57,30 @@ export const INDEX_NAMES = {
   MEDIA_ITEMS_BY_TYPE: 'by-type',
   MEDIA_ITEMS_BY_SOURCE_AND_CATEGORY: 'by-sourceId-and-category_num',
   MEDIA_ITEMS_BY_SOURCE_AND_TYPE: 'by-sourceId-and-type',
+
+  // Xtream categories indexes
+  XTREAM_CATEGORIES_BY_SOURCE_ID: 'by-sourceId',
+  XTREAM_CATEGORIES_BY_SOURCE_AND_TYPE: 'by-sourceId-and-type',
+  XTREAM_CATEGORIES_BY_SOURCE_AND_CATEGORY_ID: 'by-sourceId-and-categoryId',
+
+  // Xtream live streams indexes
+  XTREAM_LIVE_BY_SOURCE_ID: 'by-sourceId',
+  XTREAM_LIVE_BY_SOURCE_AND_CATEGORY_ID: 'by-sourceId-and-categoryId',
+  XTREAM_LIVE_BY_STREAM_ID: 'by-streamId',
+
+  // Xtream VOD streams indexes
+  XTREAM_VOD_BY_SOURCE_ID: 'by-sourceId',
+  XTREAM_VOD_BY_SOURCE_AND_CATEGORY_ID: 'by-sourceId-and-categoryId',
+  XTREAM_VOD_BY_STREAM_ID: 'by-streamId',
+
+  // Xtream series indexes
+  XTREAM_SERIES_BY_SOURCE_ID: 'by-sourceId',
+  XTREAM_SERIES_BY_SOURCE_AND_CATEGORY_ID: 'by-sourceId-and-categoryId',
+  XTREAM_SERIES_BY_SERIES_ID: 'by-seriesId',
+
+  // Xtream episodes indexes
+  XTREAM_EPISODES_BY_SERIES_ID: 'by-seriesId',
+  XTREAM_EPISODES_BY_SERIES_AND_SEASON: 'by-seriesId-and-seasonNum',
 
   // Favorites indexes
   FAVORITES_BY_SOURCE_ID: 'by-sourceId',

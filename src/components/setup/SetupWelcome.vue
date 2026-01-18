@@ -76,6 +76,7 @@
               >
                 <!-- <option value="iptv">IPTV</option> -->
                 <option value="m3u" selected>M3U Playlist</option>
+                <option value="xtreamcode">Xtream Codes</option>
               </select>
             </div>
 
@@ -90,8 +91,34 @@
                 class="flex min-h-[100px] w-full rounded-md border border-input bg-stream-surface px-3 py-2 text-sm"
               />
               <p class="text-xs text-stream-text-muted">
-                Enter your M3U playlist URL or IPTV source URL
+                Enter your playlist URL or Xtream Codes server URL
               </p>
+            </div>
+
+            <div v-if="formData.type === 'xtreamcode'" class="space-y-4">
+              <div class="space-y-2">
+                <label for="source-username" class="text-sm font-medium text-stream-text"
+                  >Username</label
+                >
+                <Input
+                  id="source-username"
+                  v-model="formData.username"
+                  placeholder="Xtream username"
+                  class="bg-stream-surface border-stream-border"
+                />
+              </div>
+              <div class="space-y-2">
+                <label for="source-password" class="text-sm font-medium text-stream-text"
+                  >Password</label
+                >
+                <Input
+                  id="source-password"
+                  v-model="formData.password"
+                  type="password"
+                  placeholder="Xtream password"
+                  class="bg-stream-surface border-stream-border"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -152,6 +179,7 @@ import {
   extractCategories,
   addSourceIdToMediaItems,
 } from '@/services/mediaParsingService'
+import { xtreamImportService } from '@/services/xtream/xtreamImportService'
 
 interface Step {
   title: string
@@ -171,6 +199,8 @@ const formData = reactive({
   name: '',
   url: '',
   type: 'm3u' as MediaSourceType,
+  username: '',
+  password: '',
 })
 
 const steps: Step[] = [
@@ -192,42 +222,78 @@ const handleNext = async (): Promise<void> => {
       alert('Please fill in all required fields')
       return
     }
+
+    if (
+      formData.type === 'xtreamcode' &&
+      (!formData.username || !formData.password || !formData.username.trim())
+    ) {
+      alert('Please enter your Xtream username and password')
+      return
+    }
+
     const url = formData.url.trim()
     isLoading.value = true
 
     try {
-      // First, parse the M3U to retrieve MediaItems and categories
-      const mediaItems = await parseAndSaveMediaItems(url)
+      if (formData.type === 'm3u') {
+        // First, parse the M3U to retrieve MediaItems and categories
+        const mediaItems = await parseAndSaveMediaItems(url)
 
-      // Extract unique categories from MediaItems
-      const categories = extractCategories(mediaItems)
+        // Extract unique categories from MediaItems
+        const categories = extractCategories(mediaItems)
 
-      // Create StreamSource (including categories)
-      const sourceInput: CreateStreamSourceInput = {
-        name: formData.name,
-        url: url,
-        type: formData.type,
-        isActive: true,
-      }
+        // Create StreamSource (including categories)
+        const sourceInput: CreateStreamSourceInput = {
+          name: formData.name,
+          url: url,
+          type: formData.type,
+          isActive: true,
+        }
 
-      const newSource = await streamStore.addSourceWithCategories(sourceInput, categories)
+        const newSource = await streamStore.addSourceWithCategories(sourceInput, categories)
 
-      // Retrieve the ID of the newly added StreamSource
-      const sourceId = newSource.id
+        // Retrieve the ID of the newly added StreamSource
+        const sourceId = newSource.id
 
-      // Update MediaItems with the sourceId and save them in batch
-      const mediaItemsWithSourceId = addSourceIdToMediaItems(mediaItems, sourceId)
+        // Update MediaItems with the sourceId and save them in batch
+        const mediaItemsWithSourceId = addSourceIdToMediaItems(mediaItems, sourceId)
 
-      try {
-        await mediaStore.addMediaItemsBatch(sourceId, mediaItemsWithSourceId)
-        console.log(
-          `Successfully parsed and saved ${mediaItems.length} media items for source ${sourceId}`,
-        )
-      } catch (error) {
-        // If saving MediaItems fails, remove the added StreamSource
-  await streamStore.removeSource(sourceId)
-        console.error('Failed to add media items batch:', error)
-        throw error
+        try {
+          await mediaStore.addMediaItemsBatch(sourceId, mediaItemsWithSourceId)
+          console.log(
+            `Successfully parsed and saved ${mediaItems.length} media items for source ${sourceId}`,
+          )
+        } catch (error) {
+          // If saving MediaItems fails, remove the added StreamSource
+          await streamStore.removeSource(sourceId)
+          console.error('Failed to add media items batch:', error)
+          throw error
+        }
+      } else if (formData.type === 'xtreamcode') {
+        const sourceInput: CreateStreamSourceInput = {
+          name: formData.name,
+          url: url,
+          type: formData.type,
+          isActive: true,
+          username: formData.username.trim(),
+          password: formData.password,
+        }
+
+        const newSource = await streamStore.addSourceWithCategories(sourceInput, [])
+        const sourceId = newSource.id
+
+        try {
+          await xtreamImportService.importSource(
+            sourceId,
+            url,
+            formData.username.trim(),
+            formData.password,
+          )
+        } catch (error) {
+          await streamStore.removeSource(sourceId)
+          console.error('Failed to import Xtream source:', error)
+          throw error
+        }
       }
 
       // No longer emit the 'source-add' event since the source was already added above

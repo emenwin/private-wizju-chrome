@@ -9,6 +9,7 @@ export interface StreamSource {
   readonly name: string
   readonly url: string
   readonly type: MediaSourceType
+  readonly username?: string
   readonly password?: string
   readonly dateAdded: string
   readonly isActive: boolean

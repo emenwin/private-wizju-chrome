@@ -2,6 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { StreamSource, CreateStreamSource } from '@/types/stream'
 import { StreamSourcesStorageV2 } from '@/services/indexedDb/streamSourcesStorageV2'
+import {
+  XtreamCategoriesStorageV2,
+  XtreamLiveStreamsStorageV2,
+  XtreamVodStreamsStorageV2,
+  XtreamSeriesStorageV2,
+} from '@/services/indexedDb/xtreamStorageV2'
+import { useMediaItemsStore } from './mediaItems'
 
 // Initialize storage service
 const streamSourcesStorage = new StreamSourcesStorageV2()
@@ -66,6 +73,22 @@ export const useStreamSourcesStore = defineStore('streamSources', () => {
 
   const removeSource = async (id: string): Promise<void> => {
     try {
+      const source = sources.value.find((item) => item.id === id)
+      const mediaItemsStore = useMediaItemsStore()
+      if (source?.type === 'm3u') {
+        await mediaItemsStore.clearMediaItemsBySource(id)
+      }
+      if (source?.type === 'xtreamcode') {
+        const categoryStorage = new XtreamCategoriesStorageV2()
+        const liveStorage = new XtreamLiveStreamsStorageV2()
+        const vodStorage = new XtreamVodStreamsStorageV2()
+        const seriesStorage = new XtreamSeriesStorageV2()
+        await categoryStorage.clearBySource(id)
+        await liveStorage.clearBySource(id)
+        await vodStorage.clearBySource(id)
+        await seriesStorage.clearBySource(id)
+      }
+
       await streamSourcesStorage.removeItem(id)
       sources.value = sources.value.filter((s) => s.id !== id)
 

@@ -35,6 +35,18 @@ export class NavigationService {
   }
 
   /**
+   * Navigate to the Xtream content page
+   * @param sourceId Optional source ID, sets it as the current source if provided
+   */
+  navigateToXtream(sourceId?: string): void {
+    if (sourceId) {
+      const navigationStore = useNavigationStore()
+      navigationStore.setCurrentSource(sourceId)
+    }
+    this.router.push({ name: 'Xtream' })
+  }
+
+  /**
    * Navigate to the Films page
    */
   navigateToFilms(): void {

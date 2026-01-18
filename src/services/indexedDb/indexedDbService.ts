@@ -5,7 +5,7 @@
  * and version upgrade handling for the Wizju IPTV Player.
  *
  * Database: WizjuIPTVDB
- * Version: 1
+ * Version: 2
  */
 
 import { openDB, type IDBPDatabase } from 'idb'
@@ -20,6 +20,11 @@ const { DB_NAME, DB_VERSION } = INDEXEDDB_CONFIG
 const REQUIRED_STORES = [
   STORE_NAMES.STREAM_SOURCES,
   STORE_NAMES.MEDIA_ITEMS,
+  STORE_NAMES.XTREAM_CATEGORIES,
+  STORE_NAMES.XTREAM_LIVE_STREAMS,
+  STORE_NAMES.XTREAM_VOD_STREAMS,
+  STORE_NAMES.XTREAM_SERIES,
+  STORE_NAMES.XTREAM_EPISODES,
   STORE_NAMES.FAVORITES,
   STORE_NAMES.RECENT_WATCHING,
 ] as const
@@ -200,6 +205,76 @@ export async function initDB(): Promise<IDBPDatabase<WizjuDBSchema>> {
             'sourceId',
           ])
           console.log('[IndexedDB] Created recentWatching store with indexes')
+        }
+      }
+
+      // Version 2: Xtream Codes stores
+      if (oldVersion < 2) {
+        if (!db.objectStoreNames.contains(STORE_NAMES.XTREAM_CATEGORIES)) {
+          const categoriesStore = db.createObjectStore(STORE_NAMES.XTREAM_CATEGORIES, {
+            keyPath: 'id',
+          })
+          categoriesStore.createIndex(INDEX_NAMES.XTREAM_CATEGORIES_BY_SOURCE_ID, 'sourceId')
+          categoriesStore.createIndex(INDEX_NAMES.XTREAM_CATEGORIES_BY_SOURCE_AND_TYPE, [
+            'sourceId',
+            'type',
+          ])
+          categoriesStore.createIndex(INDEX_NAMES.XTREAM_CATEGORIES_BY_SOURCE_AND_CATEGORY_ID, [
+            'sourceId',
+            'categoryId',
+          ])
+          console.log('[IndexedDB] Created xtreamCategories store with indexes')
+        }
+
+        if (!db.objectStoreNames.contains(STORE_NAMES.XTREAM_LIVE_STREAMS)) {
+          const liveStore = db.createObjectStore(STORE_NAMES.XTREAM_LIVE_STREAMS, {
+            keyPath: 'id',
+          })
+          liveStore.createIndex(INDEX_NAMES.XTREAM_LIVE_BY_SOURCE_ID, 'sourceId')
+          liveStore.createIndex(INDEX_NAMES.XTREAM_LIVE_BY_SOURCE_AND_CATEGORY_ID, [
+            'sourceId',
+            'categoryId',
+          ])
+          liveStore.createIndex(INDEX_NAMES.XTREAM_LIVE_BY_STREAM_ID, 'streamId')
+          console.log('[IndexedDB] Created xtreamLiveStreams store with indexes')
+        }
+
+        if (!db.objectStoreNames.contains(STORE_NAMES.XTREAM_VOD_STREAMS)) {
+          const vodStore = db.createObjectStore(STORE_NAMES.XTREAM_VOD_STREAMS, {
+            keyPath: 'id',
+          })
+          vodStore.createIndex(INDEX_NAMES.XTREAM_VOD_BY_SOURCE_ID, 'sourceId')
+          vodStore.createIndex(INDEX_NAMES.XTREAM_VOD_BY_SOURCE_AND_CATEGORY_ID, [
+            'sourceId',
+            'categoryId',
+          ])
+          vodStore.createIndex(INDEX_NAMES.XTREAM_VOD_BY_STREAM_ID, 'streamId')
+          console.log('[IndexedDB] Created xtreamVodStreams store with indexes')
+        }
+
+        if (!db.objectStoreNames.contains(STORE_NAMES.XTREAM_SERIES)) {
+          const seriesStore = db.createObjectStore(STORE_NAMES.XTREAM_SERIES, {
+            keyPath: 'id',
+          })
+          seriesStore.createIndex(INDEX_NAMES.XTREAM_SERIES_BY_SOURCE_ID, 'sourceId')
+          seriesStore.createIndex(INDEX_NAMES.XTREAM_SERIES_BY_SOURCE_AND_CATEGORY_ID, [
+            'sourceId',
+            'categoryId',
+          ])
+          seriesStore.createIndex(INDEX_NAMES.XTREAM_SERIES_BY_SERIES_ID, 'seriesId')
+          console.log('[IndexedDB] Created xtreamSeries store with indexes')
+        }
+
+        if (!db.objectStoreNames.contains(STORE_NAMES.XTREAM_EPISODES)) {
+          const episodesStore = db.createObjectStore(STORE_NAMES.XTREAM_EPISODES, {
+            keyPath: 'id',
+          })
+          episodesStore.createIndex(INDEX_NAMES.XTREAM_EPISODES_BY_SERIES_ID, 'seriesId')
+          episodesStore.createIndex(INDEX_NAMES.XTREAM_EPISODES_BY_SERIES_AND_SEASON, [
+            'seriesId',
+            'seasonNum',
+          ])
+          console.log('[IndexedDB] Created xtreamEpisodes store with indexes')
         }
       }
 
