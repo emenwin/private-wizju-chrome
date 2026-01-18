@@ -7,6 +7,13 @@
 
 import type { DBSchema } from 'idb'
 import type { StreamSource, M3UMediaItem, MediaSourceType } from './stream'
+import type {
+  XtreamCategory,
+  XtreamLiveStream,
+  XtreamVodStream,
+  XtreamSeries,
+  XtreamEpisode,
+} from './xtream'
 
 /**
  * Extended M3UMediaItem for storage with additional metadata
@@ -180,7 +187,7 @@ export interface WizjuDBSchema extends DBSchema {
    *
    * Limited to MAX_RECENT_ITEMS (e.g., 20 items)
    */
-  recentWatching: {
+ recentWatching: {
     key: string
     value: RecentWatchingItem
     indexes: {
@@ -202,6 +209,70 @@ export interface WizjuDBSchema extends DBSchema {
       'by-itemId-and-sourceId': [string, string]
     }
   }
+
+  /**
+   * Xtream Categories Store
+   */
+  xtreamCategories: {
+    key: string
+    value: XtreamCategory
+    indexes: {
+      'by-sourceId': string
+      'by-sourceId-and-type': [string, string]
+      'by-sourceId-and-categoryId': [string, string]
+    }
+  }
+
+  /**
+   * Xtream Live Streams Store
+   */
+  xtreamLiveStreams: {
+    key: string
+    value: XtreamLiveStream
+    indexes: {
+      'by-sourceId': string
+      'by-sourceId-and-categoryId': [string, string]
+      'by-streamId': number
+    }
+  }
+
+  /**
+   * Xtream VOD Streams Store
+   */
+  xtreamVodStreams: {
+    key: string
+    value: XtreamVodStream
+    indexes: {
+      'by-sourceId': string
+      'by-sourceId-and-categoryId': [string, string]
+      'by-streamId': number
+    }
+  }
+
+  /**
+   * Xtream Series Store
+   */
+  xtreamSeries: {
+    key: string
+    value: XtreamSeries
+    indexes: {
+      'by-sourceId': string
+      'by-sourceId-and-categoryId': [string, string]
+      'by-seriesId': string
+    }
+  }
+
+  /**
+   * Xtream Episodes Store
+   */
+  xtreamEpisodes: {
+    key: string
+    value: XtreamEpisode
+    indexes: {
+      'by-seriesId': string
+      'by-seriesId-and-seasonNum': [string, number]
+    }
+  }
 }
 
 /**
@@ -209,10 +280,15 @@ export interface WizjuDBSchema extends DBSchema {
  */
 export const DB_CONFIG = {
   name: 'WizjuIPTVDB',
-  version: 1,
+  version: 2,
   stores: {
     streamSources: 'streamSources',
     m3uMediaItems: 'm3uMediaItems',
+    xtreamCategories: 'xtreamCategories',
+    xtreamLiveStreams: 'xtreamLiveStreams',
+    xtreamVodStreams: 'xtreamVodStreams',
+    xtreamSeries: 'xtreamSeries',
+    xtreamEpisodes: 'xtreamEpisodes',
     favorites: 'favorites',
     recentWatching: 'recentWatching',
   },
