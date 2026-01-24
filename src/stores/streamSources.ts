@@ -71,6 +71,24 @@ export const useStreamSourcesStore = defineStore('streamSources', () => {
     }
   }
 
+  const updateSource = async (
+    sourceData: Partial<StreamSource> & { id: string },
+  ): Promise<void> => {
+    try {
+      const { id, ...updateData } = sourceData
+      const updatedSource = await streamSourcesStorage.updateItem(id, updateData)
+      if (updatedSource) {
+        const index = sources.value.findIndex((s) => s.id === id)
+        if (index !== -1) {
+          sources.value[index] = updatedSource
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update stream source:', error)
+      throw error
+    }
+  }
+
   const removeSource = async (id: string): Promise<void> => {
     try {
       const source = sources.value.find((item) => item.id === id)
@@ -157,6 +175,7 @@ export const useStreamSourcesStore = defineStore('streamSources', () => {
     addSource,
     addSourceWithCategories,
     updateSourceCategories,
+    updateSource,
     removeSource,
     toggleSource,
     setIsFirstTime,

@@ -54,7 +54,15 @@
             <UiButton
               variant="ghost"
               size="sm"
-              @click="toggleSourceActive(source.id)"
+              @click="editSource(source)"
+              class="text-stream-text/60 hover:text-stream-text"
+            >
+              <Edit class="w-4 h-4" />
+            </UiButton>
+            <UiButton
+              variant="ghost"
+              size="sm"
+              @click="streamStore.toggleSource(source.id)"
               class="text-stream-text/60 hover:text-stream-text"
             >
               {{ source.isActive ? 'Disable' : 'Enable' }}
@@ -155,6 +163,33 @@
     </div>
   </Teleport>
 
+  <!-- Edit Source Modal -->
+  <Teleport to="body">
+    <div
+      v-if="showEditSourceModal && editingSource"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="relative max-w-4xl w-full max-h-[90vh] overflow-auto">
+        <div class="absolute top-4 right-4 z-10">
+          <UiButton
+            variant="ghost"
+            size="sm"
+            class="h-8 w-8 p-0"
+            @click="handleEditCancel"
+            title="Close"
+          >
+            <span class="text-lg">×</span>
+          </UiButton>
+        </div>
+        <EditSourceDialog
+          :source="editingSource"
+          @save="handleEditSave"
+          @cancel="handleEditCancel"
+        />
+      </div>
+    </div>
+  </Teleport>
+
   <!-- Clear Data Confirmation Dialog -->
   <Teleport to="body">
     <div
@@ -180,12 +215,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Plus, PlayCircle, Trash2, AlertCircle } from 'lucide-vue-next'
+import { Plus, PlayCircle, Trash2, AlertCircle, Edit } from 'lucide-vue-next'
 import ThemeToggle from '@/components/ui/ThemeToggle.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import SetupWelcome from '@/components/setup/SetupWelcome.vue'
+import EditSourceDialog from '@/components/setup/EditSourceDialog.vue'
 import StorageStats from '@/components/ui/StorageStats.vue'
 import { useStreamSourcesStore } from '@/stores/streamSources'
+import type { StreamSource } from '@/types/stream'
 import { favoritesService } from '@/services/favoritesService'
 import { recentWatchingService } from '@/services/recentWatchingService'
 import { closeDB } from '@/services/indexedDb/indexedDbService'
@@ -194,6 +231,8 @@ const streamStore = useStreamSourcesStore()
 
 const showAddSourceModal = ref(false)
 const showClearDataConfirm = ref(false)
+const showEditSourceModal = ref(false)
+const editingSource = ref<StreamSource | null>(null)
 
 // Show add source dialog
 const showAddSourceDialog = () => {
@@ -210,9 +249,22 @@ const handleSetupComplete = () => {
   showAddSourceModal.value = false
 }
 
-// Toggle source active/inactive
-const toggleSourceActive = (sourceId: string) => {
-  streamStore.toggleSource(sourceId)
+// Edit source
+const editSource = (source: StreamSource) => {
+  editingSource.value = source
+  showEditSourceModal.value = true
+}
+
+// Handle edit save
+const handleEditSave = () => {
+  showEditSourceModal.value = false
+  editingSource.value = null
+}
+
+// Handle edit cancel
+const handleEditCancel = () => {
+  showEditSourceModal.value = false
+  editingSource.value = null
 }
 
 // Remove source
