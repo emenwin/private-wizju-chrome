@@ -75,9 +75,23 @@ interface XtreamSeriesInfoEpisodeResponse {
   episode_num?: number
   title?: string
   container_extension?: string
-  info?: string
+  info?: {
+    tmdb_id?: number
+    releasedate?: string
+    plot?: string
+    duration_secs?: number
+    duration?: string
+    movie_image?: string
+    video?: any
+    audio?: any
+    bitrate?: number
+    rating?: number
+    season?: string
+    [key: string]: any
+  }
   custom_sid?: string
   added?: string
+  season?: number
   direct_source?: string
 }
 

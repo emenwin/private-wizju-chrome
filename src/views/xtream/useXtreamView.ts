@@ -131,7 +131,7 @@ export const useXtreamView = () => {
       categoryId: item.categoryId,
       categoryName: item.categoryId ? categoryNameMap.value.get(item.categoryId) : undefined,
       sourceType: 'series',
-      actionLabel: 'Unavailable',
+      actionLabel: 'View',
       raw: item,
     }))
   })

@@ -22,7 +22,7 @@
         <PageNavigation />
         <RouterView />
       </main>
-      <aside class="hidden xl:block w-80 h-screen border-stream-border">
+      <aside v-if="!hideAside" class="hidden xl:block w-80 h-screen border-stream-border">
         <!--*bg-stream-surface border-l* -->
         <div class="p-4"></div>
       </aside>
@@ -34,7 +34,7 @@
         <PageNavigation v-if="!hidePageNavigation" />
         <RouterView />
       </main>
-      <aside class="hidden xl:block w-80 h-screen border-stream-border">
+      <aside v-if="!hideAside" class="hidden xl:block w-80 h-screen border-stream-border">
         <div class="p-4"></div>
       </aside>
     </div>
@@ -72,7 +72,11 @@ const showSidebar = computed(() => {
 })
 
 const hidePageNavigation = computed(() => {
-  return route.name === 'MediaDetail' || route.name === 'XtreamVodDetail'
+  return route.name === 'MediaDetail' || route.name === 'XtreamVodDetail' || route.name === 'XtreamSeriesDetail'
+})
+
+const hideAside = computed(() => {
+  return route.name === 'XtreamSeriesDetail'
 })
 
 // Check if migration is needed and initialize the app

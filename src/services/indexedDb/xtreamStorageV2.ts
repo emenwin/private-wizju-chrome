@@ -1,18 +1,20 @@
 import { StorageServiceV2 } from './storageServiceV2'
 import { INDEX_NAMES, STORE_NAMES } from '@/constants/storage'
-import { VOD_INFO_CACHE_EXPIRY_HOURS } from '@/constants/storage'
+import { VOD_INFO_CACHE_EXPIRY_HOURS, SERIES_INFO_CACHE_EXPIRY_HOURS } from '@/constants/storage'
 import type {
   XtreamCategory,
   XtreamLiveStream,
   XtreamVodStream,
   XtreamVodInfo,
   XtreamSeries,
+  XtreamSeriesInfo,
   XtreamEpisode,
   CreateXtreamCategory,
   CreateXtreamLiveStream,
   CreateXtreamVodStream,
   CreateXtreamVodInfo,
   CreateXtreamSeries,
+  CreateXtreamSeriesInfo,
   CreateXtreamEpisode,
 } from '@/types/xtream'
 
@@ -173,5 +175,76 @@ export class XtreamEpisodesStorageV2 extends StorageServiceV2<XtreamEpisode, Cre
   async clearBySeries(seriesId: string): Promise<void> {
     const items = await this.getBySeries(seriesId)
     await Promise.all(items.map((item) => this.removeItem(item.id)))
+  }
+}
+
+export class XtreamSeriesInfoStorageV2 extends StorageServiceV2<
+  XtreamSeriesInfo,
+  CreateXtreamSeriesInfo
+> {
+  constructor() {
+    super(STORE_NAMES.XTREAM_SERIES_INFO)
+  }
+
+  async getBySource(sourceId: string): Promise<XtreamSeriesInfo[]> {
+    return this.loadItemsByIndex(INDEX_NAMES.XTREAM_SERIES_INFO_BY_SOURCE_ID, sourceId)
+  }
+
+  async getBySeriesId(seriesId: string): Promise<XtreamSeriesInfo | null> {
+    const items = await this.loadItemsByIndex(INDEX_NAMES.XTREAM_SERIES_INFO_BY_SERIES_ID, seriesId)
+    return items.length > 0 ? items[0] : null
+  }
+
+  async getBySourceAndSeriesId(
+    sourceId: string,
+    seriesId: string,
+  ): Promise<XtreamSeriesInfo | null> {
+    const items = await this.loadItemsByIndex(
+      INDEX_NAMES.XTREAM_SERIES_INFO_BY_SOURCE_AND_SERIES_ID,
+      [sourceId, seriesId],
+    )
+    return items.length > 0 ? items[0] : null
+  }
+
+  async upsertSeriesInfo(
+    sourceId: string,
+    seriesId: string,
+    info: XtreamSeriesInfo['info'],
+    seasons: XtreamSeriesInfo['seasons'],
+    episodes: XtreamSeriesInfo['episodes'],
+    expiresAt: string,
+  ): Promise<void> {
+    const existing = await this.getBySourceAndSeriesId(sourceId, seriesId)
+    if (existing) {
+      await this.updateItem(existing.id, {
+        info,
+        seasons,
+        episodes,
+        lastUpdated: new Date().toISOString(),
+        expiresAt,
+      })
+    } else {
+      await this.addItem({
+        sourceId,
+        seriesId,
+        info,
+        seasons,
+        episodes,
+        lastUpdated: new Date().toISOString(),
+        expiresAt,
+      })
+    }
+  }
+
+  async clearBySource(sourceId: string): Promise<void> {
+    const items = await this.loadItemsByIndex(INDEX_NAMES.XTREAM_SERIES_INFO_BY_SOURCE_ID, sourceId)
+    await Promise.all(items.map((item) => this.removeItem(item.id)))
+  }
+
+  async clearExpired(): Promise<void> {
+    const now = new Date().toISOString()
+    const allItems = await this.loadItems()
+    const expiredItems = allItems.filter((item: XtreamSeriesInfo) => item.expiresAt < now)
+    await Promise.all(expiredItems.map((item: XtreamSeriesInfo) => this.removeItem(item.id)))
   }
 }

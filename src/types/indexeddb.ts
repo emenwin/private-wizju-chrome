@@ -13,6 +13,7 @@ import type {
   XtreamVodStream,
   XtreamVodInfo,
   XtreamSeries,
+  XtreamSeriesInfo,
   XtreamEpisode,
 } from './xtream'
 
@@ -285,6 +286,19 @@ export interface WizjuDBSchema extends DBSchema {
     indexes: {
       'by-seriesId': string
       'by-seriesId-and-seasonNum': [string, number]
+    }
+  }
+
+  /**
+   * Xtream Series Info Store
+   */
+  xtreamSeriesInfo: {
+    key: string
+    value: XtreamSeriesInfo
+    indexes: {
+      'by-sourceId': string
+      'by-seriesId': string
+      'by-sourceId-and-seriesId': [string, string]
     }
   }
 }

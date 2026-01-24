@@ -25,6 +25,7 @@ const REQUIRED_STORES = [
   STORE_NAMES.XTREAM_VOD_STREAMS,
   STORE_NAMES.XTREAM_VOD_INFO,
   STORE_NAMES.XTREAM_SERIES,
+  STORE_NAMES.XTREAM_SERIES_INFO,
   STORE_NAMES.XTREAM_EPISODES,
   STORE_NAMES.FAVORITES,
   STORE_NAMES.RECENT_WATCHING,
@@ -295,8 +296,24 @@ export async function initDB(): Promise<IDBPDatabase<WizjuDBSchema>> {
         }
       }
 
+      // Version 4: Xtream Series Info store
+      if (oldVersion < 4) {
+        if (!db.objectStoreNames.contains(STORE_NAMES.XTREAM_SERIES_INFO)) {
+          const seriesInfoStore = db.createObjectStore(STORE_NAMES.XTREAM_SERIES_INFO, {
+            keyPath: 'id',
+          })
+          seriesInfoStore.createIndex(INDEX_NAMES.XTREAM_SERIES_INFO_BY_SOURCE_ID, 'sourceId')
+          seriesInfoStore.createIndex(INDEX_NAMES.XTREAM_SERIES_INFO_BY_SERIES_ID, 'seriesId')
+          seriesInfoStore.createIndex(INDEX_NAMES.XTREAM_SERIES_INFO_BY_SOURCE_AND_SERIES_ID, [
+            'sourceId',
+            'seriesId',
+          ])
+          console.log('[IndexedDB] Created xtreamSeriesInfo store with indexes')
+        }
+      }
+
       // Future version upgrades can be added here
-      // if (oldVersion < 4) { ... }
+      // if (oldVersion < 5) { ... }
     },
 
     blocked(currentVersion, blockedVersion) {

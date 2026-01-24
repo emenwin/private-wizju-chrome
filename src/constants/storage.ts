@@ -12,7 +12,7 @@ export const INDEXEDDB_CONFIG = {
   /** Database name */
   DB_NAME: 'WizjuIPTVDB',
   /** Database version */
-  DB_VERSION: 3,
+  DB_VERSION: 4,
 } as const
 
 // Export shorthand for convenience
@@ -36,6 +36,8 @@ export const STORE_NAMES = {
   XTREAM_VOD_INFO: 'xtreamVodInfo',
   /** Xtream series store */
   XTREAM_SERIES: 'xtreamSeries',
+  /** Xtream series info store */
+  XTREAM_SERIES_INFO: 'xtreamSeriesInfo',
   /** Xtream episodes store */
   XTREAM_EPISODES: 'xtreamEpisodes',
   /** Favorites store */
@@ -84,6 +86,11 @@ export const INDEX_NAMES = {
   XTREAM_SERIES_BY_SOURCE_ID: 'by-sourceId',
   XTREAM_SERIES_BY_SOURCE_AND_CATEGORY_ID: 'by-sourceId-and-categoryId',
   XTREAM_SERIES_BY_SERIES_ID: 'by-seriesId',
+
+  // Xtream series info indexes
+  XTREAM_SERIES_INFO_BY_SOURCE_ID: 'by-sourceId',
+  XTREAM_SERIES_INFO_BY_SERIES_ID: 'by-seriesId',
+  XTREAM_SERIES_INFO_BY_SOURCE_AND_SERIES_ID: 'by-sourceId-and-seriesId',
 
   // Xtream episodes indexes
   XTREAM_EPISODES_BY_SERIES_ID: 'by-seriesId',
@@ -170,6 +177,8 @@ export type MigrationKey = (typeof MIGRATION_KEYS)[keyof typeof MIGRATION_KEYS]
 export const CACHE_CONFIG = {
   /** VOD info cache expiry in hours */
   VOD_INFO_CACHE_EXPIRY_HOURS: 24,
+  /** Series info cache expiry in hours */
+  SERIES_INFO_CACHE_EXPIRY_HOURS: 24,
 } as const
 
 /**
@@ -187,7 +196,7 @@ export const UI_CONFIG = {
 } as const
 
 // Export shorthand for convenience
-export const { VOD_INFO_CACHE_EXPIRY_HOURS } = CACHE_CONFIG
+export const { VOD_INFO_CACHE_EXPIRY_HOURS, SERIES_INFO_CACHE_EXPIRY_HOURS } = CACHE_CONFIG
 export const {
   HEADER_SCROLL_THRESHOLD,
   FADE_IN_DURATION_MS,

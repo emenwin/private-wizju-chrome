@@ -1,4 +1,7 @@
-import type { XtreamVodInfoResponse } from '@/services/xtream/xtreamApiService'
+import type {
+  XtreamVodInfoResponse,
+  XtreamSeriesInfoResponse,
+} from '@/services/xtream/xtreamApiService'
 
 export type XtreamCategoryType = 'livestream' | 'vod' | 'series'
 
@@ -60,6 +63,53 @@ export interface XtreamVodInfo {
   readonly dateAdded: string
 }
 
+export interface XtreamSeriesInfo {
+  readonly id: string
+  readonly sourceId: string
+  readonly seriesId: string
+  readonly info: {
+    name?: string
+    plot?: string
+    cast?: string
+    director?: string
+    genre?: string
+    releaseDate?: string
+    rating?: string
+    backdrop?: string
+    youtubeTrailer?: string
+    episodeRunTime?: number
+  }
+  readonly seasons: Array<{
+    seasonNumber: number
+    name?: string
+    cover?: string
+    overview?: string
+    airDate?: string
+    episodeCount?: number
+  }>
+  readonly episodes: Record<
+    string,
+    Array<{
+      id: number
+      episodeNum?: number
+      title?: string
+      containerExtension?: string
+      info?: {
+        plot?: string
+        duration?: string
+        releasedate?: string
+        movie_image?: string
+        rating?: number
+        [key: string]: any
+      }
+      directSource?: string
+    }>
+  >
+  readonly lastUpdated: string
+  readonly expiresAt: string
+  readonly dateAdded: string
+}
+
 export interface XtreamSeries {
   readonly id: string
   readonly sourceId: string
@@ -101,4 +151,5 @@ export type CreateXtreamLiveStream = Omit<XtreamLiveStream, 'id' | 'dateAdded'>
 export type CreateXtreamVodStream = Omit<XtreamVodStream, 'id' | 'dateAdded'>
 export type CreateXtreamVodInfo = Omit<XtreamVodInfo, 'id' | 'dateAdded'>
 export type CreateXtreamSeries = Omit<XtreamSeries, 'id' | 'dateAdded'>
+export type CreateXtreamSeriesInfo = Omit<XtreamSeriesInfo, 'id' | 'dateAdded'>
 export type CreateXtreamEpisode = Omit<XtreamEpisode, 'id' | 'dateAdded'>

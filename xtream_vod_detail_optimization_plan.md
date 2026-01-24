@@ -196,4 +196,4 @@
 - 任务 3: 3-4 天
 
 总计: 7-10 天（根据具体复杂度调整）</content>
-<parameter name="filePath">/Users/jingjiang/Projects/iOS/wizju/wizju_flutter/docs/xtream_vod_detail_optimization_plan.md
+<parameter name="filePath">/wizju_flutter/docs/xtream_vod_detail_optimization_plan.md
