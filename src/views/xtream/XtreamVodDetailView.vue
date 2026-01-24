@@ -40,7 +40,21 @@
 
         <!-- Right Actions -->
         <div class="flex items-center gap-2">
-            <!-- Placeholder for future actions -->
+           <Button
+            @click="handleToggleFavorite"
+            variant="ghost"
+            size="icon"
+            class="rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200"
+            :class="
+              (isScrolled 
+                ? 'hover:bg-stream-text/10 ' 
+                : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-md border border-white/10 ') +
+              (isFavorite ? 'text-red-500' : (isScrolled ? 'text-stream-text' : 'text-white'))
+            "
+            :title="isFavorite ? 'Remove from Favorites' : 'Add to Favorites'"
+          >
+            <Heart :class="['w-5 h-5', isFavorite ? 'fill-current' : '']" />
+          </Button>
         </div>
       </div>
     </header>
@@ -133,6 +147,21 @@
            <!-- Main Info (Left) -->
            <div class="lg:col-span-8 space-y-10 animate-fade-in-up delay-100">
               
+              <!-- Poster Image -->
+              <div v-if="vodInfo && vodInfo.info && (vodInfo.info.cover_big || vodInfo.info.movie_image)" class="flex justify-center lg:justify-start">
+                <div class="relative group">
+                  <img 
+                    :src="vodInfo.info.cover_big || vodInfo.info.movie_image" 
+                    :alt="vod?.name || 'Movie Poster'"
+                    class="w-48 h-72 md:w-56 md:h-84 lg:w-64 lg:h-96 object-cover rounded-xl shadow-2xl border border-stream-border/50 transition-transform duration-300 group-hover:scale-105"
+                    @error="handleImageError"
+                    loading="lazy"
+                  />
+                  <!-- Overlay for hover effect -->
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 rounded-xl"></div>
+                </div>
+              </div>
+              
               <!-- Actions -->
               <div class="flex items-center gap-5">
                  <Button
@@ -213,7 +242,7 @@
                  </div>
                  <div class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
                     <span class="text-stream-text-muted flex items-center gap-3"><Star class="w-4 h-4 text-yellow-500"/> Rating</span>
-                    <span class="text-stream-text font-medium">{{ vodInfo && vodInfo.info && vodInfo.info.rating || vod && vod.rating || 'N/A' }}{{ vodInfo && vodInfo.info && vodInfo.info.rating || vod && vod.rating ? '/10' : '' }}</span>
+                    <span class="text-stream-text font-medium">{{ vodInfoRating || vod && vod.rating || 'N/A' }}{{ vodInfoRating || (vod && vod.rating) ? '/10' : '' }}</span>
                  </div>
                  <div v-if="vodInfo && vodInfo.info && vodInfo.info.genre" class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
                     <span class="text-stream-text-muted flex items-center gap-3">🎭 Genre</span>
@@ -243,7 +272,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, Play, Star, Calendar, X, Clock, User, Users } from 'lucide-vue-next'
+import { ArrowLeft, Play, Star, Calendar, X, Clock, User, Users, Heart } from 'lucide-vue-next'
 import Card from '@/components/ui/UiCard.vue'
 import Button from '@/components/ui/UiButton.vue'
 import { useStreamSourcesStore } from '@/stores/streamSources'
@@ -251,9 +280,10 @@ import { useNavigationService } from '@/services/navigationService'
 import { XtreamVodStreamsStorageV2 } from '@/services/indexedDb/xtreamStorageV2'
 import { XtreamVodInfoService } from '@/services/xtream/xtreamVodInfoService'
 import { buildXtreamVodUrl } from '@/services/xtream/xtreamUrlBuilder'
+import { favoritesService } from '@/services/favoritesService'
 import type { XtreamVodStream } from '@/types/xtream'
 import type { XtreamVodInfoResponse } from '@/services/xtream/xtreamApiService'
-import type { StreamSource } from '@/types/stream'
+import type { StreamSource, M3UMediaItem } from '@/types/stream'
 import { HEADER_SCROLL_THRESHOLD, FADE_IN_DURATION_MS, STAGGER_DELAY_MS, VIDEO_INIT_TIMEOUT_MS } from '@/constants/storage'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
@@ -281,6 +311,9 @@ const handleScroll = () => {
   isScrolled.value = window.scrollY > HEADER_SCROLL_THRESHOLD
 }
 
+// Favorite state
+const isFavorite = ref(false)
+
 const vodId = computed(() => String(route.params.id || ''))
 const vodUrl = computed(() => getVideoUrl())
 
@@ -297,6 +330,13 @@ const backdropStyle = computed(() => {
   return 'background: radial-gradient(circle at top, #1f2937, #0f172a);'
 })
 
+const vodInfoRating = computed(() => {
+  const rating = vodInfo.value?.info?.rating
+  if (rating === undefined || rating === null) return undefined
+  const numRating = typeof rating === 'string' ? parseFloat(rating) : rating
+  return isNaN(numRating) ? undefined : numRating
+})
+
 const loadVod = async () => {
   if (!vodId.value) return
   isLoading.value = true
@@ -306,12 +346,45 @@ const loadVod = async () => {
     if (item) {
       source.value = streamSourcesStore.getSourceById(item.sourceId) || null
       // Load detailed VOD info
-      await loadVodInfo(item.sourceId, parseInt(vodId.value))
+      await loadVodInfo(item.sourceId, item.streamId)
+      await updateFavoriteStatus()
     }
   } catch (error) {
     console.error('Failed to load VOD detail:', error)
   } finally {
     isLoading.value = false
+  }
+}
+
+const updateFavoriteStatus = async () => {
+  if (!vod.value || !source.value?.id) {
+    isFavorite.value = false
+    return
+  }
+  isFavorite.value = await favoritesService.isFavorite(vod.value.streamId.toString(), source.value.id)
+}
+
+const convertToM3UMediaItem = (vod: XtreamVodStream): M3UMediaItem => {
+  return {
+    id: vod.streamId.toString(),
+    title: vod.name,
+    description: vod.plot,
+    thumbnail: vod.streamIcon,
+    category: vod.categoryId || '',
+    url: getVideoUrl() || '',
+    type: 'vod',
+    genre: vod.genre,
+    year: vod.releaseDate ? new Date(vod.releaseDate).getFullYear() : undefined,
+    rating: vod.rating,
+  }
+}
+
+const handleToggleFavorite = async () => {
+  if (!vod.value || !source.value?.id) return
+  const mediaItem = convertToM3UMediaItem(vod.value)
+  const success = await favoritesService.toggleFavorite(mediaItem, source.value.id)
+  if (success) {
+    await updateFavoriteStatus()
   }
 }
 
@@ -443,6 +516,12 @@ const cleanupPlayer = () => {
 const handleStop = (): void => {
   cleanupPlayer()
   isPlaying.value = false
+}
+
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  img.style.display = 'none'
+  console.warn('Failed to load poster image:', img.src)
 }
 
 onMounted(() => {

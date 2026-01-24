@@ -72,7 +72,7 @@ const showSidebar = computed(() => {
 })
 
 const hidePageNavigation = computed(() => {
-  return route.name === 'MediaDetail'
+  return route.name === 'MediaDetail' || route.name === 'XtreamVodDetail'
 })
 
 // Check if migration is needed and initialize the app

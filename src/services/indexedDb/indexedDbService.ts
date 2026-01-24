@@ -5,7 +5,7 @@
  * and version upgrade handling for the Wizju IPTV Player.
  *
  * Database: WizjuIPTVDB
- * Version: 2
+ * Version: 3
  */
 
 import { openDB, type IDBPDatabase } from 'idb'
@@ -23,6 +23,7 @@ const REQUIRED_STORES = [
   STORE_NAMES.XTREAM_CATEGORIES,
   STORE_NAMES.XTREAM_LIVE_STREAMS,
   STORE_NAMES.XTREAM_VOD_STREAMS,
+  STORE_NAMES.XTREAM_VOD_INFO,
   STORE_NAMES.XTREAM_SERIES,
   STORE_NAMES.XTREAM_EPISODES,
   STORE_NAMES.FAVORITES,

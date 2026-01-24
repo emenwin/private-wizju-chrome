@@ -114,7 +114,7 @@ export const useXtreamView = () => {
         name: item.name,
         description: item.plot || item.genre,
         thumbnail: item.streamIcon,
-        rating: item.rating,
+        rating: item.rating ? parseFloat(String(item.rating)) : undefined,
         categoryId: item.categoryId,
         categoryName: item.categoryId ? categoryNameMap.value.get(item.categoryId) : undefined,
         sourceType: 'vod',
@@ -127,7 +127,7 @@ export const useXtreamView = () => {
       name: item.name,
       description: item.plot || item.genre,
       thumbnail: item.cover,
-      rating: item.rating,
+      rating: item.rating ? parseFloat(String(item.rating)) : undefined,
       categoryId: item.categoryId,
       categoryName: item.categoryId ? categoryNameMap.value.get(item.categoryId) : undefined,
       sourceType: 'series',
@@ -224,7 +224,7 @@ export const useXtreamView = () => {
       category: item.categoryName || '',
       url,
       type: item.sourceType === 'livestream' ? 'live' : 'vod',
-      rating: item.rating,
+      rating: item.rating ? parseFloat(String(item.rating)) : undefined,
     }
 
     navigationService.navigateToMediaDetail(mediaItem, currentSource.value.id)

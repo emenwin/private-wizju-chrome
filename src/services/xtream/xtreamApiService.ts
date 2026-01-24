@@ -23,7 +23,7 @@ interface XtreamVodStreamResponse {
   name?: string
   stream_icon?: string
   added?: string
-  rating?: number
+  rating?: string | number
   rating_mpaa?: string
   container_extension?: string
   direct_source?: string
@@ -51,7 +51,7 @@ interface XtreamSeriesResponse {
   releaseDate?: string
   release_date?: string
   last_modified?: string
-  rating?: number
+  rating?: string | number
   rating_mpaa?: string
   backdrop_path?: string
   youtube_trailer?: string
@@ -114,7 +114,7 @@ interface XtreamVodInfoResponse {
     duration_secs?: number
     duration?: string
     bitrate?: number
-    rating?: number
+    rating?: string | number
   }
   movie_data?: {
     stream_id?: number
