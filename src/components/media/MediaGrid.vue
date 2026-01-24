@@ -19,7 +19,7 @@
       v-for="item in items"
       :key="item.id"
       :media="item"
-      @click="$emit('item-click', item)"
+      @click="$emit('item-click', $event)"
     />
   </div>
 </template>
@@ -27,10 +27,10 @@
 <script setup lang="ts">
 import { cn } from '@/utils/cn'
 import MediaCard from './MediaCard.vue'
-import type { M3UMediaItem } from '@/types/stream'
+import type { FavOrRecentlyItem } from '@/types/stream'
 
 interface Props {
-  items: M3UMediaItem[]
+  items: FavOrRecentlyItem[]
   className?: string
   emptyMessage?: string
 }
@@ -38,6 +38,6 @@ interface Props {
 defineProps<Props>()
 
 defineEmits<{
-  'item-click': [item: M3UMediaItem]
+  'item-click': [item: FavOrRecentlyItem]
 }>()
 </script>

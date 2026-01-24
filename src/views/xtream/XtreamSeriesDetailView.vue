@@ -116,14 +116,15 @@
                   <Play class="w-5 h-5" />
                   Play S1 E1
                 </Button>
-                <!-- <Button size="lg" variant="outline" class="gap-2 bg-transparent">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  class="gap-2 bg-transparent"
+                  @click="handleAddToFavorites"
+                >
                   <Plus class="w-5 h-5" />
-                  My List
+                  {{ isFavorite ? 'Remove Favorite' : 'Favorite' }}
                 </Button>
-                <Button size="lg" variant="outline" class="gap-2 bg-transparent">
-                  <ThumbsUp class="w-5 h-5" />
-                  Rate
-                </Button> -->
               </div>
             </div>
           </div>
@@ -183,12 +184,13 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, Play, Star, Plus, ThumbsUp, X } from 'lucide-vue-next'
+import { ArrowLeft, Play, Star, Plus } from 'lucide-vue-next'
 import Button from '@/components/ui/UiButton.vue'
 import XtreamSeasonsCard from './components/XtreamSeasonsCard.vue'
 import XtreamEpisodesCard from './components/XtreamEpisodesCard.vue'
 import { useStreamSourcesStore } from '@/stores/streamSources'
 import { useNavigationService } from '@/services/navigationService'
+import { favoritesService } from '@/services/favoritesService'
 import {
   XtreamSeriesStorageV2,
   XtreamSeriesInfoStorageV2,
@@ -197,44 +199,9 @@ import { buildXtreamSeriesEpisodeUrl } from '@/services/xtream/xtreamUrlBuilder'
 import { xtreamApiService } from '@/services/xtream/xtreamApiService'
 import type { XtreamSeries } from '@/types/xtream'
 import type { StreamSource } from '@/types/stream'
+import type { FavoriteItem } from '@/types/indexeddb'
 import type { XtreamSeriesInfoResponse } from '@/services/xtream/xtreamApiService'
-import {
-  BACKDROP_HEIGHT,
-  POSTER_ASPECT_RATIO,
-  VIDEO_MAX_HEIGHT,
-  SECTION_PADDING,
-  CARD_PADDING,
-  EPISODE_PADDING,
-  GAP_SMALL,
-  GAP_MEDIUM,
-  GAP_LARGE,
-  GAP_EXTRA_LARGE,
-  BORDER_RADIUS_SMALL,
-  BORDER_RADIUS_MEDIUM,
-  BORDER_RADIUS_LARGE,
-  SHADOW_SMALL,
-  SHADOW_MEDIUM,
-  SHADOW_LARGE,
-  BACKDROP_GRADIENT,
-  OVERLAY_GRADIENT,
-  TRANSITION_DURATION,
-  HOVER_SCALE,
-  HOVER_SHADOW,
-  TITLE_SIZE,
-  SUBTITLE_SIZE,
-  BODY_SIZE,
-  SMALL_SIZE,
-  EXTRA_SMALL_SIZE,
-  ACCENT_COLOR,
-  SURFACE_COLOR,
-  BORDER_COLOR,
-  TEXT_COLOR,
-  TEXT_MUTED_COLOR,
-  BUTTON_VARIANT_OUTLINE,
-  BUTTON_VARIANT_SELECTED,
-  BUTTON_GRADIENT_PRIMARY,
-  BUTTON_HOVER_ACCENT,
-} from '@/constants/ui'
+
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
 import '@videojs/http-streaming'
@@ -250,7 +217,7 @@ type SeriesEpisode = {
     releasedate?: string
     movie_image?: string
     rating?: number
-    [key: string]: any
+    [key: string]: unknown
   }
   directSource?: string
 }
@@ -275,12 +242,12 @@ const source = ref<StreamSource | null>(null)
 const seriesInfo = ref<XtreamSeriesInfoResponse | null>(null)
 const isLoading = ref(false)
 const isPlaying = ref(false)
+const isFavorite = ref(false)
 const imageLoadError = ref(false)
 const videoPlayer = ref<HTMLVideoElement | null>(null)
 const selectedSeason = ref<number | null>(null)
 const selectedEpisode = ref<SeriesEpisode | null>(null)
 const lastPlayedEpisodeId = ref<number | null>(null)
-const activeTab = ref('episodes')
 let player: ReturnType<typeof videojs> | null = null
 
 const isPlayerOpen = computed(() => isPlaying.value && !!selectedEpisode.value)
@@ -361,6 +328,48 @@ const episodesForSelectedSeason = computed(() => {
   return episodesBySeason.value.get(selectedSeason.value) || []
 })
 
+const updateFavoriteStatus = async () => {
+  if (!series.value || !source.value?.id) {
+    isFavorite.value = false
+    return
+  }
+  const favorite: FavoriteItem = {
+    id: '',
+    itemId: series.value.id,
+    sourceId: source.value.id,
+    type: 'series',
+    dateAdded: '',
+    title: series.value.name,
+    description: series.value.plot,
+    thumbnail: series.value.cover,
+    category: series.value.genre || '',
+    duration: undefined,
+    tvgName: undefined,
+    groupTitle: undefined,
+  }
+  isFavorite.value = await favoritesService.isFavorite(favorite)
+}
+
+const handleAddToFavorites = async () => {
+  if (!series.value || !source.value?.id) return
+  const favorite: FavoriteItem = {
+    id: '',
+    itemId: series.value.id,
+    sourceId: source.value.id,
+    type: 'series',
+    dateAdded: '',
+    title: series.value.name,
+    description: series.value.plot,
+    thumbnail: series.value.cover,
+    category: series.value.genre || '',
+    duration: undefined,
+    tvgName: undefined,
+    groupTitle: undefined,
+  }
+  await favoritesService.toggleFavorite(favorite)
+  await updateFavoriteStatus()
+}
+
 const loadSeries = async () => {
   if (!seriesId.value) return
   isLoading.value = true
@@ -370,6 +379,7 @@ const loadSeries = async () => {
     if (item) {
       source.value = streamSourcesStore.getSourceById(item.sourceId) || null
       await loadSeriesInfo(item)
+      await updateFavoriteStatus()
     }
   } catch (error) {
     console.error('Failed to load series detail:', error)

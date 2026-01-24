@@ -283,8 +283,9 @@ import { buildXtreamVodUrl } from '@/services/xtream/xtreamUrlBuilder'
 import { favoritesService } from '@/services/favoritesService'
 import type { XtreamVodStream } from '@/types/xtream'
 import type { XtreamVodInfoResponse } from '@/services/xtream/xtreamApiService'
-import type { StreamSource, M3UMediaItem } from '@/types/stream'
-import { HEADER_SCROLL_THRESHOLD, FADE_IN_DURATION_MS, STAGGER_DELAY_MS, VIDEO_INIT_TIMEOUT_MS } from '@/constants/storage'
+import type { StreamSource } from '@/types/stream'
+import type { FavoriteItem } from '@/types/indexeddb'
+import { HEADER_SCROLL_THRESHOLD,VIDEO_INIT_TIMEOUT_MS } from '@/constants/storage'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
 import '@videojs/themes/dist/forest/index.css'
@@ -361,28 +362,40 @@ const updateFavoriteStatus = async () => {
     isFavorite.value = false
     return
   }
-  isFavorite.value = await favoritesService.isFavorite(vod.value.streamId.toString(), source.value.id)
-}
-
-const convertToM3UMediaItem = (vod: XtreamVodStream): M3UMediaItem => {
-  return {
-    id: vod.streamId.toString(),
-    title: vod.name,
-    description: vod.plot,
-    thumbnail: vod.streamIcon,
-    category: vod.categoryId || '',
-    url: getVideoUrl() || '',
+  const favorite: FavoriteItem = {
+    id: '',
+    itemId: vod.value.streamId.toString(),
+    sourceId: source.value.id,
     type: 'vod',
-    genre: vod.genre,
-    year: vod.releaseDate ? new Date(vod.releaseDate).getFullYear() : undefined,
-    rating: vod.rating,
+    dateAdded: '',
+    title: vod.value.name,
+    description: vod.value.plot,
+    thumbnail: vod.value.streamIcon,
+    category: vod.value.categoryId || '',
+    duration: undefined,
+    tvgName: undefined,
+    groupTitle: undefined,
   }
+  isFavorite.value = await favoritesService.isFavorite(favorite)
 }
 
 const handleToggleFavorite = async () => {
   if (!vod.value || !source.value?.id) return
-  const mediaItem = convertToM3UMediaItem(vod.value)
-  const success = await favoritesService.toggleFavorite(mediaItem, source.value.id)
+  const favorite: FavoriteItem = {
+    id: '',
+    itemId: vod.value.streamId.toString(),
+    sourceId: source.value.id,
+    type: 'vod',
+    dateAdded: '',
+    title: vod.value.name,
+    description: vod.value.plot,
+    thumbnail: vod.value.streamIcon,
+    category: vod.value.categoryId || '',
+    duration: undefined,
+    tvgName: undefined,
+    groupTitle: undefined,
+  }
+  const success = await favoritesService.toggleFavorite(favorite)
   if (success) {
     await updateFavoriteStatus()
   }

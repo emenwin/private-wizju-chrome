@@ -236,6 +236,7 @@ import { useNavigationService } from '@/services/navigationService'
 import { recentWatchingService } from '@/services/recentWatchingService'
 import { favoritesService } from '@/services/favoritesService'
 import type { M3UMediaItem } from '@/types/stream'
+import type { FavoriteItem } from '@/types/indexeddb'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
 import '@videojs/themes/dist/forest/index.css'
@@ -260,17 +261,38 @@ const handleScroll = () => {
 // Favorite state
 const isFavorite = ref(false)
 
+const buildFavoriteItem = (mediaItem: M3UMediaItem, sourceId: string): FavoriteItem => {
+  return {
+    id: '',
+    itemId: mediaItem.id,
+    sourceId,
+    type: mediaItem.type,
+    dateAdded: '',
+    title: mediaItem.title,
+    description: mediaItem.description,
+    thumbnail: mediaItem.thumbnail,
+    category: mediaItem.category,
+    duration: mediaItem.duration,
+    tvgName: mediaItem.tvgName,
+    groupTitle: mediaItem.groupTitle,
+  }
+}
+
 const updateFavoriteStatus = async () => {
   if (!media.value || !navigationStore.currentSourceId) {
     isFavorite.value = false
     return
   }
-  isFavorite.value = await favoritesService.isFavorite(media.value.id, navigationStore.currentSourceId)
+  isFavorite.value = await favoritesService.isFavorite(
+    buildFavoriteItem(media.value, navigationStore.currentSourceId),
+  )
 }
 
 const handleToggleFavorite = async () => {
   if (!media.value || !navigationStore.currentSourceId) return
-  const success = await favoritesService.toggleFavorite(media.value, navigationStore.currentSourceId)
+  const success = await favoritesService.toggleFavorite(
+    buildFavoriteItem(media.value, navigationStore.currentSourceId),
+  )
   if (success) {
     await updateFavoriteStatus()
   }

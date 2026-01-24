@@ -1,4 +1,4 @@
-import type { M3UMediaItem, MediaSourceType } from '@/types/stream'
+import type { M3UMediaItem } from '@/types/stream'
 import type { FavoriteItem } from '@/types/indexeddb'
 import { StorageServiceV2 } from './indexedDb/storageServiceV2'
 import { STORE_NAMES } from '@/constants/storage'
@@ -34,19 +34,21 @@ class FavoritesService {
   /**
    * Check if a media item is already a favorite
    */
-  async isFavorite(mediaId: string, sourceId: string): Promise<boolean> {
+  async isFavorite(favorite: FavoriteItem): Promise<boolean> {
     const favorites = await this.getFavorites()
-    return favorites.some((fav) => fav.itemId === mediaId && fav.sourceId === sourceId)
+    return favorites.some(
+      (fav) => fav.itemId === favorite.itemId && fav.sourceId === favorite.sourceId,
+    )
   }
 
   /**
    * Add a media item to favorites
    */
-  async addToFavorites(mediaItem: M3UMediaItem, sourceId: string): Promise<boolean> {
+  async addToFavorites(favorite: FavoriteItem): Promise<boolean> {
     try {
       // Check if the item is already a favorite
-      if (await this.isFavorite(mediaItem.id, sourceId)) {
-        console.warn('Media item already in favorites:', mediaItem.title)
+      if (await this.isFavorite(favorite)) {
+        console.warn('Media item already in favorites:', favorite.title)
         return false
       }
 
@@ -60,21 +62,21 @@ class FavoritesService {
       }
 
       const favoriteData: CreateFavoriteItem = {
-        itemId: mediaItem.id,
-        sourceId,
-        type: 'm3u' as MediaSourceType,
-        title: mediaItem.title,
-        description: mediaItem.description,
-        thumbnail: mediaItem.thumbnail,
-        category: mediaItem.category,
-        duration: mediaItem.duration,
-        tvgName: mediaItem.tvgName,
-        groupTitle: mediaItem.groupTitle,
+        itemId: favorite.itemId,
+        sourceId: favorite.sourceId,
+        type: favorite.type,
+        title: favorite.title,
+        description: favorite.description,
+        thumbnail: favorite.thumbnail,
+        category: favorite.category,
+        duration: favorite.duration,
+        tvgName: favorite.tvgName,
+        groupTitle: favorite.groupTitle,
       }
 
       await this.storageService.addItem(favoriteData)
 
-      console.log('Added to favorites:', mediaItem.title)
+      console.log('Added to favorites:', favorite.title)
       return true
     } catch (error) {
       console.error('Failed to add to favorites:', error)
@@ -85,11 +87,11 @@ class FavoritesService {
   /**
    * Remove a media item from favorites
    */
-  async removeFromFavorites(mediaId: string, sourceId: string): Promise<boolean> {
+  async removeFromFavorites(favorite: FavoriteItem): Promise<boolean> {
     try {
       const favorites = await this.getFavorites()
       const favoriteToRemove = favorites.find(
-        (fav) => fav.itemId === mediaId && fav.sourceId === sourceId,
+        (fav) => fav.itemId === favorite.itemId && fav.sourceId === favorite.sourceId,
       )
 
       if (!favoriteToRemove) {
@@ -98,7 +100,7 @@ class FavoritesService {
       }
 
       await this.storageService.removeItem(favoriteToRemove.id)
-      console.log('Removed from favorites:', mediaId)
+      console.log('Removed from favorites:', favorite.itemId)
       return true
     } catch (error) {
       console.error('Failed to remove from favorites:', error)
@@ -109,11 +111,11 @@ class FavoritesService {
   /**
    * Toggle the favorite status of a media item
    */
-  async toggleFavorite(mediaItem: M3UMediaItem, sourceId: string): Promise<boolean> {
-    if (await this.isFavorite(mediaItem.id, sourceId)) {
-      return await this.removeFromFavorites(mediaItem.id, sourceId)
+  async toggleFavorite(favorite: FavoriteItem): Promise<boolean> {
+    if (await this.isFavorite(favorite)) {
+      return await this.removeFromFavorites(favorite)
     } else {
-      return await this.addToFavorites(mediaItem, sourceId)
+      return await this.addToFavorites(favorite)
     }
   }
 
@@ -142,27 +144,6 @@ class FavoritesService {
     } catch (error) {
       console.error('Failed to clear favorites:', error)
     }
-  }
-
-  /**
-   * Convert favorite items to a displayable array of MediaItems
-   */
-  async getFavoritesAsMediaItems(): Promise<M3UMediaItem[]> {
-    const favorites = await this.getFavorites()
-    return favorites.map((fav) => ({
-      id: fav.itemId,
-      title: fav.title,
-      description: fav.description,
-      thumbnail: fav.thumbnail,
-      category: fav.category,
-      url: '', // Not stored in favorites
-      type: 'live', // Default type
-      genre: fav.category,
-      timeRemaining: fav.duration,
-      tvgName: fav.tvgName,
-      groupTitle: fav.groupTitle,
-      duration: fav.duration,
-    }))
   }
 
   /**

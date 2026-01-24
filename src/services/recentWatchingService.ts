@@ -2,7 +2,6 @@ import type { M3UMediaItem } from '@/types/stream'
 import type { RecentWatchingItem } from '@/types/indexeddb'
 import { StorageServiceV2 } from './indexedDb/storageServiceV2'
 import { STORE_NAMES } from '@/constants/storage'
-import type { MediaSourceType } from '@/types/stream'
 
 /**
  * Recent Watching Service
@@ -66,7 +65,7 @@ class RecentWatchingService {
       const newItemData: RecentWatchingCreateData = {
         itemId: data.mediaItem.id,
         sourceId: data.sourceId,
-        type: 'm3u' as MediaSourceType,
+        type: data.mediaItem.type,
         watchedAt: new Date().toISOString(),
         lastPosition: data.lastPosition,
         title: data.mediaItem.title,
@@ -160,82 +159,6 @@ class RecentWatchingService {
     } catch {
       return 0
     }
-  }
-
-  /**
-   * Convert RecentWatchingItem to MediaItem (for display purposes)
-   * Adds additional display information
-   */
-  async convertToDisplayMediaItems(items: RecentWatchingItem[]): Promise<M3UMediaItem[]> {
-    return items.map((item) => ({
-      id: item.itemId,
-      title: item.title,
-      description: this.formatWatchedInfo(item),
-      thumbnail: item.thumbnail,
-      category: item.category,
-      url: '', // Not stored in recent watching
-      type: 'live', // Default type
-      genre: item.category,
-      timeRemaining: item.lastPosition
-        ? this.formatTimeRemaining(item.lastPosition)
-        : item.duration,
-      tvgName: item.tvgName,
-      groupTitle: item.groupTitle,
-      duration: item.duration,
-    }))
-  }
-
-  /**
-   * Filter recent watching items by media type
-   */
-  async getRecentWatchingByType(type: MediaSourceType): Promise<M3UMediaItem[]> {
-    const items = await this.loadRecentWatching()
-    const filteredItems = items.filter((item) => item.type === type)
-    return await this.convertToDisplayMediaItems(filteredItems)
-  }
-
-  /**
-   * Get recently watched channels (M3U type)
-   */
-  async getRecentChannels(): Promise<M3UMediaItem[]> {
-    return await this.getRecentWatchingByType('m3u')
-  }
-
-  /**
-   * Format watch information
-   */
-  private formatWatchedInfo(item: RecentWatchingItem): string {
-    const watchedDate = new Date(item.watchedAt)
-    const now = new Date()
-    const diffMs = now.getTime() - watchedDate.getTime()
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-    const diffDays = Math.floor(diffHours / 24)
-
-    let timeAgo: string
-    if (diffDays > 0) {
-      timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-    } else if (diffHours > 0) {
-      timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-    } else {
-      timeAgo = 'Recently watched'
-    }
-
-    // Combine original description and watch time
-    const originalDesc = item.description || ''
-    return originalDesc ? `${originalDesc} • ${timeAgo}` : timeAgo
-  }
-
-  /**
-   * Format remaining time display
-   */
-  private formatTimeRemaining(position: number): string {
-    const minutes = Math.floor(position / 60)
-    if (minutes > 60) {
-      const hours = Math.floor(minutes / 60)
-      const remainingMinutes = minutes % 60
-      return `${hours}h ${remainingMinutes}m played`
-    }
-    return `${minutes}min played`
   }
 }
 

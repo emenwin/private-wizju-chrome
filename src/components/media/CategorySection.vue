@@ -43,11 +43,11 @@ import { ChevronRight } from 'lucide-vue-next'
 import { cn } from '@/utils/cn'
 import Button from '@/components/ui/UiButton.vue'
 import MediaGrid from './MediaGrid.vue'
-import type { M3UMediaItem } from '@/types/stream'
+import type { FavOrRecentlyItem } from '@/types/stream'
 
 interface Props {
   title: string
-  items: M3UMediaItem[]
+  items: FavOrRecentlyItem[]
   onViewAll?: () => void
   className?: string
   emptyMessage?: string
@@ -56,7 +56,7 @@ interface Props {
 const props = defineProps<Props>()
 
 defineEmits<{
-  'item-click': [item: M3UMediaItem]
+  'item-click': [item: FavOrRecentlyItem]
   'view-all': []
 }>()
 

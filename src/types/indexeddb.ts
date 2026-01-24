@@ -6,7 +6,7 @@
  */
 
 import type { DBSchema } from 'idb'
-import type { StreamSource, M3UMediaItem, MediaSourceType } from './stream'
+import type { StreamSource, M3UMediaItem, FavOrRecentItemType } from './stream'
 import type {
   XtreamCategory,
   XtreamLiveStream,
@@ -34,7 +34,7 @@ export interface FavoriteItem {
   readonly id: string
   readonly itemId: string // Reference to the original media item ID
   readonly sourceId: string // Associated StreamSource ID
-  readonly type: MediaSourceType // Media source type
+  readonly type: FavOrRecentItemType
   readonly dateAdded: string
 
   // Essential fields for display (copied from media item)
@@ -55,7 +55,7 @@ export interface RecentWatchingItem {
   readonly id: string
   readonly itemId: string // Reference to the original media item ID
   readonly sourceId: string // Associated StreamSource ID
-  readonly type: MediaSourceType // Media source type
+  readonly type: FavOrRecentItemType
   readonly dateAdded: string // For compatibility with StorableItem
   readonly watchedAt: string
   readonly lastPosition?: number // Playback position in seconds

@@ -46,11 +46,11 @@
 
         <!-- Duration/Time Remaining -->
         <div
-          v-if="media.duration || media.timeRemaining"
+          v-if="timeLabel"
           class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center"
         >
           <Clock class="w-3 h-3 mr-1" />
-          {{ media.timeRemaining || media.duration }}
+          {{ timeLabel }}
         </div>
       </div>
 
@@ -87,32 +87,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Play, Clock, Star } from 'lucide-vue-next'
 import { cn } from '@/utils/cn'
 import Card from '@/components/ui/UiCard.vue'
 import Button from '@/components/ui/UiButton.vue'
-import { useNavigationService } from '@/services/navigationService'
-import type { M3UMediaItem } from '@/types/stream'
+import type { FavOrRecentlyItem } from '@/types/stream'
 
 interface Props {
-  media: M3UMediaItem
+  media: FavOrRecentlyItem
   className?: string
 }
 
 const props = defineProps<Props>()
 
-const navigationService = useNavigationService()
 const imageLoaded = ref(false)
 const imageError = ref(false)
 
-defineEmits<{
-  click: []
+const emit = defineEmits<{
+  click: [item: FavOrRecentlyItem]
 }>()
 
+const timeLabel = computed(() => {
+  const media = props.media as FavOrRecentlyItem & { lastPosition?: number }
+  if (media.lastPosition) {
+    const minutes = Math.floor(media.lastPosition / 60)
+    if (minutes > 60) {
+      const hours = Math.floor(minutes / 60)
+      const remainingMinutes = minutes % 60
+      return `${hours}h ${remainingMinutes}m played`
+    }
+    return `${minutes}min played`
+  }
+  return props.media.duration
+})
+
 const handleCardClick = (): void => {
-  // Use navigation service for navigation. Since MediaCard is usually used to display various media items,
-  // sourceId is not specified here, allowing the navigation service to use the current source
-  navigationService.navigateToChannelDetail(props.media)
+  emit('click', props.media)
 }
 </script>
