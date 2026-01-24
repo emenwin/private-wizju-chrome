@@ -3,7 +3,7 @@
     <!-- Logo/Title -->
     <div class="p-4 border-b border-sidebar-border">
       <a href="https://wizju.com" class="text-lg font-semibold text-sidebar-foreground">
-        Wiz<span class="text-orange-500">ju</span>
+        Wiz<span class="text-primary">ju</span>
       </a>
       <p class="text-xs text-sidebar-foreground/60">Media Hub</p>
     </div>

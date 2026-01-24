@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col gap-4 mb-6">
-    <!-- Tabs -->
     <!-- Tabs (Segmented Control) -->
     <div class="self-start">
       <div class="inline-flex p-1 bg-stream-surface border border-stream-border rounded-lg">
@@ -11,7 +10,7 @@
             cn(
               'px-6 py-1.5 text-sm font-medium rounded-md transition-all duration-200',
               selectedTab === tab.key
-                ? 'bg-stream-accent text-white shadow-sm'
+                ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'text-stream-text-muted hover:text-stream-text',
             )
           "
@@ -82,7 +81,7 @@
             cn(
               'px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap',
               selectedCategoryId === category.id
-                ? 'bg-stream-accent text-white'
+                ? 'bg-secondary-foreground text-secondary'
                 : 'text-stream-text-muted hover:text-stream-text hover:bg-stream-accent/10',
             )
           "

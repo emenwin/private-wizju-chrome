@@ -9,7 +9,7 @@
 @tailwind utilities;
 
 /* Theme Variable Definitions */
-@layer base {
+  @layer base {
   :root {
     /* Light theme colors */
     --background: 0 0% 100%;
@@ -18,7 +18,7 @@
     --card-foreground: 222 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 84% 4.9%;
-    --primary: 217 91% 60%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -30,15 +30,15 @@
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --ring: 25 95% 53%;
     --radius: 0.75rem;
 
     /* Streaming specific colors - Light */
     --stream-bg: 0 0% 100%;
     --stream-surface: 0 0% 98%;
     --stream-surface-hover: 210 40% 96%;
-    --stream-accent: 217 91% 60%;
-    --stream-accent-hover: 217 91% 55%;
+    --stream-accent: 25 95% 53%;
+    --stream-accent-hover: 25 95% 48%;
     --stream-text: 222 84% 4.9%;
     --stream-text-muted: 215 16% 47%;
     --stream-border: 214 32% 91%;
@@ -46,21 +46,21 @@
     /* Sidebar colors - Light */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 222 84% 4.9%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 210 40% 96%;
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 25 95% 53%;
 
     /* Gradients - Light */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 45%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%), hsl(210 40% 96%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 100%), hsl(25 40% 96%));
 
     /* Shadows - Light */
     --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.1);
-    --shadow-accent: 0 0 20px hsl(217 91% 60% / 0.2);
+    --shadow-accent: 0 0 20px hsl(25 95% 53% / 0.2);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -74,26 +74,26 @@
     --card-foreground: 0 0% 95%;
     --popover: 220 20% 10%;
     --popover-foreground: 0 0% 95%;
-    --primary: 217 91% 60%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 15% 15%;
     --secondary-foreground: 0 0% 85%;
     --muted: 220 15% 12%;
     --muted-foreground: 0 0% 60%;
-    --accent: 217 91% 60%;
+    --accent: 25 95% 53%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 220 15% 20%;
     --input: 220 15% 15%;
-    --ring: 217 91% 60%;
+    --ring: 25 95% 53%;
 
     /* Streaming specific colors - Dark */
     --stream-bg: 220 23% 7%;
     --stream-surface: 220 20% 10%;
     --stream-surface-hover: 220 20% 13%;
-    --stream-accent: 217 91% 60%;
-    --stream-accent-hover: 217 91% 55%;
+    --stream-accent: 25 95% 53%;
+    --stream-accent-hover: 25 95% 48%;
     --stream-text: 0 0% 95%;
     --stream-text-muted: 0 0% 60%;
     --stream-border: 220 15% 20%;
@@ -101,21 +101,21 @@
     /* Sidebar colors - Dark */
     --sidebar-background: 220 25% 8%;
     --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 20% 12%;
     --sidebar-accent-foreground: 0 0% 90%;
     --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 25 95% 53%;
 
     /* Gradients - Dark */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 50%));
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 45%));
     --gradient-card: linear-gradient(180deg, hsl(220 20% 10%), hsl(220 20% 8%));
     --gradient-hero: linear-gradient(135deg, hsl(220 23% 7%), hsl(220 20% 10%));
 
     /* Shadows - Dark */
     --shadow-card: 0 4px 20px hsl(220 23% 7% / 0.3);
-    --shadow-accent: 0 0 20px hsl(217 91% 60% / 0.2);
+    --shadow-accent: 0 0 20px hsl(25 95% 53% / 0.2);
   }
 }
 
@@ -145,6 +145,12 @@
   }
   .text-secondary-foreground {
     color: hsl(var(--secondary-foreground));
+  }
+  .bg-secondary-foreground {
+    background-color: hsl(var(--secondary-foreground));
+  }
+  .text-secondary {
+    color: hsl(var(--secondary));
   }
   .bg-muted {
     background-color: hsl(var(--muted));

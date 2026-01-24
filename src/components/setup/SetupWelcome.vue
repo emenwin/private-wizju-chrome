@@ -1,14 +1,14 @@
 <template>
   <div class="flex items-center justify-center">
     <Card class="w-full max-w-2xl bg-stream-surface border-stream-border shadow-card">
-      <div class="text-center p-6">
+      <div class="text-center p-4">
         <h2 class="text-2xl text-stream-text mb-2">{{ steps[currentStep]?.title }}</h2>
         <p class="text-stream-text-muted mb-6">
           {{ steps[currentStep]?.description }}
         </p>
       </div>
 
-      <div class="p-6 space-y-6">
+      <div class="px-6 py-4 space-y-4">
         <!-- Step 0: Welcome -->
         <div v-if="currentStep === 0" class="text-center space-y-6">
           <div
@@ -88,7 +88,7 @@
                 id="source-url"
                 v-model="formData.url"
                 placeholder="http://your-provider.com/playlist.m3u"
-                class="flex min-h-[100px] w-full rounded-md border border-input bg-stream-surface px-3 py-2 text-sm"
+                class="flex min-h-[60px] w-full rounded-md border border-input bg-stream-surface px-3 py-2 text-sm"
               />
               <p class="text-xs text-stream-text-muted">
                 Enter your playlist URL or Xtream Codes server URL
