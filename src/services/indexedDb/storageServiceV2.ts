@@ -78,6 +78,19 @@ export class StorageServiceV2<T extends StorableItem, C extends Omit<T, 'id' | '
   async loadItemsByIndex(indexName: string, query?: IDBValidKey | IDBKeyRange): Promise<T[]> {
     try {
       const db = await this.getDatabase()
+
+      // Fast path: use native getAllFromIndex when possible.
+      // Note: boolean queries are handled separately due to fake-indexeddb limitations.
+      if (typeof query !== 'boolean') {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const items = await (db as any).getAllFromIndex(this.storeName as any, indexName, query)
+          return items as T[]
+        } catch {
+          // Fall back to cursor-based iteration below.
+        }
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tx = db.transaction(this.storeName as any, 'readonly')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -275,6 +288,75 @@ export class StorageServiceV2<T extends StorableItem, C extends Omit<T, 'id' | '
   }
 
   /**
+   * Remove items matching an index query in a single transaction.
+   *
+   * Uses a cursor to avoid loading all matching objects into memory.
+   *
+   * NOTE: Uses manual filtering for boolean queries due to fake-indexeddb limitations.
+   *
+   * @param indexName The name of the index to query
+   * @param query The query value or range
+   * @returns Promise that resolves to the count of removed items
+   */
+  async removeItemsByIndex(indexName: string, query: IDBValidKey | IDBKeyRange): Promise<number> {
+    try {
+      const db = await this.getDatabase()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tx = db.transaction(this.storeName as any, 'readwrite')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const store = tx.objectStore(this.storeName as any)
+
+      let removedCount = 0
+
+      // Workaround for fake-indexeddb: boolean index queries can be unreliable in tests.
+      if (typeof query === 'boolean') {
+        const allItems = (await store.getAll()) as T[]
+        const propName = indexName.startsWith('by-')
+          ? indexName.substring(3).replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+          : indexName
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const toRemove = allItems.filter((item: any) => item[propName] === query)
+        for (const item of toRemove) {
+          await store.delete(item.id)
+          removedCount++
+        }
+
+        await tx.done
+        return removedCount
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const index = (store as any).index(indexName)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const indexAny = index as any
+
+      // Prefer key cursor when available (avoids reading full values).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let cursor = indexAny.openKeyCursor
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await indexAny.openKeyCursor(query as any)
+        : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await indexAny.openCursor(query as any)
+
+      while (cursor) {
+        await cursor.delete()
+        removedCount++
+        cursor = await cursor.continue()
+      }
+
+      await tx.done
+      return removedCount
+    } catch (error) {
+      console.error(
+        `[StorageServiceV2] Failed to remove items by index ${indexName} from ${this.storeName}:`,
+        error,
+      )
+      throw error
+    }
+  }
+
+  /**
    * Clear all items from the store
    *
    * WARNING: This will permanently delete all items in the store!
@@ -452,6 +534,7 @@ export class StorageServiceV2<T extends StorableItem, C extends Omit<T, 'id' | '
     query: IDBValidKey | IDBKeyRange | undefined,
     offset: number,
     limit: number,
+    direction: IDBCursorDirection = 'next',
   ): Promise<T[]> {
     try {
       const db = await this.getDatabase()
@@ -464,7 +547,7 @@ export class StorageServiceV2<T extends StorableItem, C extends Omit<T, 'id' | '
 
       const items: T[] = []
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let cursor = await index.openCursor(query as any)
+      let cursor = await index.openCursor(query as any, direction as any)
       let currentIndex = 0
 
       while (cursor) {

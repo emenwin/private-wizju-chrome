@@ -184,9 +184,7 @@ export const useMediaItemsStore = defineStore('mediaItems', () => {
    */
   const clearMediaItemsBySource = async (sourceId: string): Promise<void> => {
     try {
-      const items = await mediaItemsStorage.getItemsBySourceId(sourceId)
-      // Remove all items for this source
-      await Promise.all(items.map((item) => mediaItemsStorage.removeItem(item.id)))
+      await mediaItemsStorage.removeItemsBySourceId(sourceId)
       delete mediaItemsBySource.value[sourceId]
     } catch (error) {
       console.error('Failed to clear media items by source:', error)

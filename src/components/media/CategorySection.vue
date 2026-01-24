@@ -1,7 +1,13 @@
 <template>
   <section :class="cn('space-y-4', className)">
     <div class="flex items-center justify-between">
-      <h2 class="text-xl font-semibold text-stream-text flex items-center">
+      <h2
+        :class="[
+          'text-xl font-semibold text-stream-text flex items-center',
+          navigateTo ? 'cursor-pointer hover:text-stream-accent transition-colors' : ''
+        ]"
+        @click="navigateTo ? $router.push(navigateTo) : undefined"
+      >
         {{ title }}
         <ChevronRight class="w-5 h-5 ml-1" />
       </h2>
@@ -39,6 +45,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ChevronRight } from 'lucide-vue-next'
 import { cn } from '@/utils/cn'
 import Button from '@/components/ui/UiButton.vue'
@@ -51,6 +58,7 @@ interface Props {
   onViewAll?: () => void
   className?: string
   emptyMessage?: string
+  navigateTo?: string
 }
 
 const props = defineProps<Props>()
@@ -60,6 +68,7 @@ defineEmits<{
   'view-all': []
 }>()
 
+const $router = useRouter()
 const showAll = ref(false)
 
 const displayItems = computed(() => (showAll.value ? props.items : props.items.slice(0, 6)))

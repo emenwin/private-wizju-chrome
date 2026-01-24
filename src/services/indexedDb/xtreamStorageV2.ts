@@ -34,8 +34,7 @@ export class XtreamCategoriesStorageV2 extends StorageServiceV2<
   }
 
   async clearBySource(sourceId: string): Promise<void> {
-    const items = await this.loadItemsByIndex(INDEX_NAMES.XTREAM_CATEGORIES_BY_SOURCE_ID, sourceId)
-    await Promise.all(items.map((item) => this.removeItem(item.id)))
+    await this.removeItemsByIndex(INDEX_NAMES.XTREAM_CATEGORIES_BY_SOURCE_ID, sourceId)
   }
 }
 
@@ -59,8 +58,7 @@ export class XtreamLiveStreamsStorageV2 extends StorageServiceV2<
   }
 
   async clearBySource(sourceId: string): Promise<void> {
-    const items = await this.loadItemsByIndex(INDEX_NAMES.XTREAM_LIVE_BY_SOURCE_ID, sourceId)
-    await Promise.all(items.map((item) => this.removeItem(item.id)))
+    await this.removeItemsByIndex(INDEX_NAMES.XTREAM_LIVE_BY_SOURCE_ID, sourceId)
   }
 }
 
@@ -84,8 +82,7 @@ export class XtreamVodStreamsStorageV2 extends StorageServiceV2<
   }
 
   async clearBySource(sourceId: string): Promise<void> {
-    const items = await this.loadItemsByIndex(INDEX_NAMES.XTREAM_VOD_BY_SOURCE_ID, sourceId)
-    await Promise.all(items.map((item) => this.removeItem(item.id)))
+    await this.removeItemsByIndex(INDEX_NAMES.XTREAM_VOD_BY_SOURCE_ID, sourceId)
   }
 }
 
@@ -129,8 +126,7 @@ export class XtreamVodInfoStorageV2 extends StorageServiceV2<XtreamVodInfo, Crea
   }
 
   async clearBySource(sourceId: string): Promise<void> {
-    const items = await this.loadItemsByIndex(INDEX_NAMES.XTREAM_VOD_INFO_BY_SOURCE_ID, sourceId)
-    await Promise.all(items.map((item) => this.removeItem(item.id)))
+    await this.removeItemsByIndex(INDEX_NAMES.XTREAM_VOD_INFO_BY_SOURCE_ID, sourceId)
   }
 
   async clearExpired(expiryHours: number = VOD_INFO_CACHE_EXPIRY_HOURS): Promise<void> {
@@ -158,8 +154,7 @@ export class XtreamSeriesStorageV2 extends StorageServiceV2<XtreamSeries, Create
   }
 
   async clearBySource(sourceId: string): Promise<void> {
-    const items = await this.loadItemsByIndex(INDEX_NAMES.XTREAM_SERIES_BY_SOURCE_ID, sourceId)
-    await Promise.all(items.map((item) => this.removeItem(item.id)))
+    await this.removeItemsByIndex(INDEX_NAMES.XTREAM_SERIES_BY_SOURCE_ID, sourceId)
   }
 }
 
@@ -173,8 +168,7 @@ export class XtreamEpisodesStorageV2 extends StorageServiceV2<XtreamEpisode, Cre
   }
 
   async clearBySeries(seriesId: string): Promise<void> {
-    const items = await this.getBySeries(seriesId)
-    await Promise.all(items.map((item) => this.removeItem(item.id)))
+    await this.removeItemsByIndex(INDEX_NAMES.XTREAM_EPISODES_BY_SERIES_ID, seriesId)
   }
 }
 
@@ -237,8 +231,7 @@ export class XtreamSeriesInfoStorageV2 extends StorageServiceV2<
   }
 
   async clearBySource(sourceId: string): Promise<void> {
-    const items = await this.loadItemsByIndex(INDEX_NAMES.XTREAM_SERIES_INFO_BY_SOURCE_ID, sourceId)
-    await Promise.all(items.map((item) => this.removeItem(item.id)))
+    await this.removeItemsByIndex(INDEX_NAMES.XTREAM_SERIES_INFO_BY_SOURCE_ID, sourceId)
   }
 
   async clearExpired(): Promise<void> {

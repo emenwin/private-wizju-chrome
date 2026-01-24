@@ -29,7 +29,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/m3u/LiveView.vue'),
     meta: { keepAlive: true, keepAliveKey: 'Live' },
   },
- 
+
   {
     path: '/xtream',
     name: 'Xtream',
@@ -50,6 +50,16 @@ const routes: RouteRecordRaw[] = [
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/SettingsView.vue'),
+  },
+  {
+    path: '/recent-watching',
+    name: 'RecentWatching',
+    component: () => import('@/views/RecentWatchingView.vue'),
+  },
+  {
+    path: '/favorites',
+    name: 'Favorites',
+    component: () => import('@/views/FavoritesView.vue'),
   },
   {
     path: '/media',

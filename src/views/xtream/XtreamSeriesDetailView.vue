@@ -119,10 +119,11 @@
                 <Button
                   size="lg"
                   variant="outline"
-                  class="gap-2 bg-transparent"
+                  class="gap-2 bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white hover:border-white/30"
                   @click="handleAddToFavorites"
                 >
-                  <Plus class="w-5 h-5" />
+                  <Heart v-if="isFavorite" class="w-5 h-5 fill-current" />
+                  <Plus v-else class="w-5 h-5" />
                   {{ isFavorite ? 'Remove Favorite' : 'Favorite' }}
                 </Button>
               </div>
@@ -184,7 +185,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, Play, Star, Plus } from 'lucide-vue-next'
+import { ArrowLeft, Play, Star, Plus, Heart } from 'lucide-vue-next'
 import Button from '@/components/ui/UiButton.vue'
 import XtreamSeasonsCard from './components/XtreamSeasonsCard.vue'
 import XtreamEpisodesCard from './components/XtreamEpisodesCard.vue'

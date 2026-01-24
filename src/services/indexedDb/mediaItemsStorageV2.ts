@@ -231,9 +231,7 @@ export class MediaItemsStorageV2 extends StorageServiceV2<StorableMediaItem, Cre
    */
   async removeItemsBySourceId(sourceId: string): Promise<number> {
     try {
-      const items = await this.getItemsBySourceId(sourceId)
-      const ids = items.map((item) => item.id)
-      return await this.removeItems(ids)
+      return await this.removeItemsByIndex(INDEX_NAMES.MEDIA_ITEMS_BY_SOURCE_ID, sourceId)
     } catch (error) {
       console.error('[MediaItemsStorageV2] Failed to remove items by source:', error)
       throw error
