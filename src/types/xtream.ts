@@ -1,3 +1,5 @@
+import type { XtreamVodInfoResponse } from '@/services/xtream/xtreamApiService'
+
 export type XtreamCategoryType = 'livestream' | 'vod' | 'series'
 
 export interface XtreamCategory {
@@ -49,6 +51,15 @@ export interface XtreamVodStream {
   readonly dateAdded: string
 }
 
+export interface XtreamVodInfo {
+  readonly id: string
+  readonly sourceId: string
+  readonly vodId: number
+  readonly info: XtreamVodInfoResponse
+  readonly lastUpdated: string
+  readonly dateAdded: string
+}
+
 export interface XtreamSeries {
   readonly id: string
   readonly sourceId: string
@@ -88,5 +99,6 @@ export interface XtreamEpisode {
 export type CreateXtreamCategory = Omit<XtreamCategory, 'id' | 'dateAdded'>
 export type CreateXtreamLiveStream = Omit<XtreamLiveStream, 'id' | 'dateAdded'>
 export type CreateXtreamVodStream = Omit<XtreamVodStream, 'id' | 'dateAdded'>
+export type CreateXtreamVodInfo = Omit<XtreamVodInfo, 'id' | 'dateAdded'>
 export type CreateXtreamSeries = Omit<XtreamSeries, 'id' | 'dateAdded'>
 export type CreateXtreamEpisode = Omit<XtreamEpisode, 'id' | 'dateAdded'>

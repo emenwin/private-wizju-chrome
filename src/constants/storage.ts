@@ -12,7 +12,7 @@ export const INDEXEDDB_CONFIG = {
   /** Database name */
   DB_NAME: 'WizjuIPTVDB',
   /** Database version */
-  DB_VERSION: 2,
+  DB_VERSION: 3,
 } as const
 
 // Export shorthand for convenience
@@ -32,6 +32,8 @@ export const STORE_NAMES = {
   XTREAM_LIVE_STREAMS: 'xtreamLiveStreams',
   /** Xtream VOD streams store */
   XTREAM_VOD_STREAMS: 'xtreamVodStreams',
+  /** Xtream VOD info store */
+  XTREAM_VOD_INFO: 'xtreamVodInfo',
   /** Xtream series store */
   XTREAM_SERIES: 'xtreamSeries',
   /** Xtream episodes store */
@@ -72,6 +74,11 @@ export const INDEX_NAMES = {
   XTREAM_VOD_BY_SOURCE_ID: 'by-sourceId',
   XTREAM_VOD_BY_SOURCE_AND_CATEGORY_ID: 'by-sourceId-and-categoryId',
   XTREAM_VOD_BY_STREAM_ID: 'by-streamId',
+
+  // Xtream VOD info indexes
+  XTREAM_VOD_INFO_BY_SOURCE_ID: 'by-sourceId',
+  XTREAM_VOD_INFO_BY_VOD_ID: 'by-vodId',
+  XTREAM_VOD_INFO_BY_SOURCE_AND_VOD_ID: 'by-sourceId-and-vodId',
 
   // Xtream series indexes
   XTREAM_SERIES_BY_SOURCE_ID: 'by-sourceId',
@@ -156,3 +163,34 @@ export type LocalStorageKey = (typeof LOCALSTORAGE_KEYS)[keyof typeof LOCALSTORA
  * Type-safe migration key type
  */
 export type MigrationKey = (typeof MIGRATION_KEYS)[keyof typeof MIGRATION_KEYS]
+
+/**
+ * Cache Configuration
+ */
+export const CACHE_CONFIG = {
+  /** VOD info cache expiry in hours */
+  VOD_INFO_CACHE_EXPIRY_HOURS: 24,
+} as const
+
+/**
+ * UI Configuration
+ */
+export const UI_CONFIG = {
+  /** Scroll threshold for header changes in pixels */
+  HEADER_SCROLL_THRESHOLD: 50,
+  /** Animation duration for fade in effects in milliseconds */
+  FADE_IN_DURATION_MS: 800,
+  /** Animation delay for staggered effects in milliseconds */
+  STAGGER_DELAY_MS: 100,
+  /** Video player initialization timeout in milliseconds */
+  VIDEO_INIT_TIMEOUT_MS: 100,
+} as const
+
+// Export shorthand for convenience
+export const { VOD_INFO_CACHE_EXPIRY_HOURS } = CACHE_CONFIG
+export const {
+  HEADER_SCROLL_THRESHOLD,
+  FADE_IN_DURATION_MS,
+  STAGGER_DELAY_MS,
+  VIDEO_INIT_TIMEOUT_MS,
+} = UI_CONFIG

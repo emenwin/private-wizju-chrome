@@ -11,6 +11,7 @@ import type {
   XtreamCategory,
   XtreamLiveStream,
   XtreamVodStream,
+  XtreamVodInfo,
   XtreamSeries,
   XtreamEpisode,
 } from './xtream'
@@ -187,7 +188,7 @@ export interface WizjuDBSchema extends DBSchema {
    *
    * Limited to MAX_RECENT_ITEMS (e.g., 20 items)
    */
- recentWatching: {
+  recentWatching: {
     key: string
     value: RecentWatchingItem
     indexes: {
@@ -250,6 +251,19 @@ export interface WizjuDBSchema extends DBSchema {
   }
 
   /**
+   * Xtream VOD Info Store
+   */
+  xtreamVodInfo: {
+    key: string
+    value: XtreamVodInfo
+    indexes: {
+      'by-sourceId': string
+      'by-vodId': number
+      'by-sourceId-and-vodId': [string, number]
+    }
+  }
+
+  /**
    * Xtream Series Store
    */
   xtreamSeries: {
@@ -280,13 +294,14 @@ export interface WizjuDBSchema extends DBSchema {
  */
 export const DB_CONFIG = {
   name: 'WizjuIPTVDB',
-  version: 2,
+  version: 3,
   stores: {
     streamSources: 'streamSources',
     m3uMediaItems: 'm3uMediaItems',
     xtreamCategories: 'xtreamCategories',
     xtreamLiveStreams: 'xtreamLiveStreams',
     xtreamVodStreams: 'xtreamVodStreams',
+    xtreamVodInfo: 'xtreamVodInfo',
     xtreamSeries: 'xtreamSeries',
     xtreamEpisodes: 'xtreamEpisodes',
     favorites: 'favorites',

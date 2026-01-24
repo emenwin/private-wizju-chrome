@@ -148,16 +148,55 @@
               <div class="prose prose-invert max-w-none border-t border-stream-border/30 pt-8">
                 <h3 class="text-2xl font-bold text-stream-text mb-4">Synopsis</h3>
                 <p class="text-stream-text-muted leading-relaxed text-lg lg:text-xl font-light">
-                  {{ vod.plot || 'No description available for this content.' }}
+                  {{ vodInfo && vodInfo.info && (vodInfo.info.plot || vodInfo.info.description) || vod && vod.plot || 'No description available for this content.' }}
                 </p>
               </div>
               
-              <div v-if="vod.cast" class="pt-8 border-t border-stream-border/30">
+              <!-- Additional Details from API -->
+              <div v-if="vodInfo && vodInfo.info" class="grid md:grid-cols-2 gap-8 pt-8 border-t border-stream-border/30">
+                <div v-if="vodInfo.info.duration || vodInfo.info.duration_secs" class="flex items-center gap-4">
+                  <Clock class="w-5 h-5 text-stream-accent" />
+                  <div>
+                    <div class="text-sm text-stream-text-muted uppercase tracking-wider">Duration</div>
+                    <div class="text-stream-text font-medium">
+                      {{ formatDuration(vodInfo.info.duration_secs || vodInfo.info.duration) }}
+                    </div>
+                  </div>
+                </div>
+                
+                <div v-if="vodInfo.info.country" class="flex items-center gap-4">
+                  <div class="w-5 h-5 rounded bg-stream-accent/20 flex items-center justify-center">
+                    <span class="text-xs font-bold text-stream-accent">🌍</span>
+                  </div>
+                  <div>
+                    <div class="text-sm text-stream-text-muted uppercase tracking-wider">Country</div>
+                    <div class="text-stream-text font-medium">{{ vodInfo.info.country }}</div>
+                  </div>
+                </div>
+                
+                <div v-if="vodInfo.info.director" class="flex items-center gap-4">
+                  <User class="w-5 h-5 text-stream-accent" />
+                  <div>
+                    <div class="text-sm text-stream-text-muted uppercase tracking-wider">Director</div>
+                    <div class="text-stream-text font-medium">{{ vodInfo.info.director }}</div>
+                  </div>
+                </div>
+                
+                <div v-if="vodInfo.info.actors || vodInfo.info.cast" class="flex items-center gap-4">
+                  <Users class="w-5 h-5 text-stream-accent" />
+                  <div>
+                    <div class="text-sm text-stream-text-muted uppercase tracking-wider">Cast</div>
+                    <div class="text-stream-text font-medium">{{ vodInfo.info.actors || vodInfo.info.cast }}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="vod && vod.cast && !(vodInfo && vodInfo.info && (vodInfo.info.actors || vodInfo.info.cast))" class="pt-8 border-t border-stream-border/30">
                  <h3 class="text-sm font-semibold text-stream-text-muted uppercase tracking-wider mb-4">Cast</h3>
                  <p class="text-stream-text leading-relaxed">{{ vod.cast }}</p>
               </div>
                  
-              <div v-if="vod.director" class="pt-8 border-t border-stream-border/30">
+              <div v-if="vod && vod.director && !(vodInfo && vodInfo.info && vodInfo.info.director)" class="pt-8 border-t border-stream-border/30">
                  <h3 class="text-sm font-semibold text-stream-text-muted uppercase tracking-wider mb-4">Director</h3>
                  <p class="text-stream-text">{{ vod.director }}</p>
               </div>
@@ -170,11 +209,19 @@
                  
                  <div class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
                     <span class="text-stream-text-muted flex items-center gap-3"><Calendar class="w-4 h-4 text-stream-accent/80"/> Release Date</span>
-                    <span class="text-stream-text font-medium">{{ vod.releaseDate || 'N/A' }}</span>
+                    <span class="text-stream-text font-medium">{{ vodInfo && vodInfo.info && (vodInfo.info.releasedate || vodInfo.info.release_date) || vod && vod.releaseDate || 'N/A' }}</span>
                  </div>
                  <div class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
                     <span class="text-stream-text-muted flex items-center gap-3"><Star class="w-4 h-4 text-yellow-500"/> Rating</span>
-                    <span class="text-stream-text font-medium">{{ vod.rating || 'N/A' }}/10</span>
+                    <span class="text-stream-text font-medium">{{ vodInfo && vodInfo.info && vodInfo.info.rating || vod && vod.rating || 'N/A' }}{{ vodInfo && vodInfo.info && vodInfo.info.rating || vod && vod.rating ? '/10' : '' }}</span>
+                 </div>
+                 <div v-if="vodInfo && vodInfo.info && vodInfo.info.genre" class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
+                    <span class="text-stream-text-muted flex items-center gap-3">🎭 Genre</span>
+                    <span class="text-stream-text font-medium">{{ vodInfo.info.genre }}</span>
+                 </div>
+                 <div v-if="vodInfo && vodInfo.info && (vodInfo.info.age || vodInfo.info.mpaa_rating)" class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
+                    <span class="text-stream-text-muted flex items-center gap-3">🔞 Age Rating</span>
+                    <span class="text-stream-text font-medium">{{ vodInfo.info.age || vodInfo.info.mpaa_rating }}</span>
                  </div>
               </Card>
 
@@ -196,15 +243,18 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, Play, Star, Calendar, X } from 'lucide-vue-next'
+import { ArrowLeft, Play, Star, Calendar, X, Clock, User, Users } from 'lucide-vue-next'
 import Card from '@/components/ui/UiCard.vue'
 import Button from '@/components/ui/UiButton.vue'
 import { useStreamSourcesStore } from '@/stores/streamSources'
 import { useNavigationService } from '@/services/navigationService'
 import { XtreamVodStreamsStorageV2 } from '@/services/indexedDb/xtreamStorageV2'
+import { XtreamVodInfoService } from '@/services/xtream/xtreamVodInfoService'
 import { buildXtreamVodUrl } from '@/services/xtream/xtreamUrlBuilder'
 import type { XtreamVodStream } from '@/types/xtream'
+import type { XtreamVodInfoResponse } from '@/services/xtream/xtreamApiService'
 import type { StreamSource } from '@/types/stream'
+import { HEADER_SCROLL_THRESHOLD, FADE_IN_DURATION_MS, STAGGER_DELAY_MS, VIDEO_INIT_TIMEOUT_MS } from '@/constants/storage'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
 import '@videojs/themes/dist/forest/index.css'
@@ -214,10 +264,13 @@ const route = useRoute()
 const navigationService = useNavigationService()
 const streamSourcesStore = useStreamSourcesStore()
 const vodStorage = new XtreamVodStreamsStorageV2()
+const vodInfoService = new XtreamVodInfoService()
 
 const vod = ref<XtreamVodStream | null>(null)
 const source = ref<StreamSource | null>(null)
+const vodInfo = ref<XtreamVodInfoResponse | null>(null)
 const isLoading = ref(false)
+const isLoadingInfo = ref(false)
 const isPlaying = ref(false)
 const videoPlayer = ref<HTMLVideoElement | null>(null)
 let player: ReturnType<typeof videojs> | null = null
@@ -225,7 +278,7 @@ let player: ReturnType<typeof videojs> | null = null
 // Scroll state for header
 const isScrolled = ref(false)
 const handleScroll = () => {
-  isScrolled.value = window.scrollY > 50
+  isScrolled.value = window.scrollY > HEADER_SCROLL_THRESHOLD
 }
 
 const vodId = computed(() => String(route.params.id || ''))
@@ -252,11 +305,25 @@ const loadVod = async () => {
     vod.value = item || null
     if (item) {
       source.value = streamSourcesStore.getSourceById(item.sourceId) || null
+      // Load detailed VOD info
+      await loadVodInfo(item.sourceId, parseInt(vodId.value))
     }
   } catch (error) {
     console.error('Failed to load VOD detail:', error)
   } finally {
     isLoading.value = false
+  }
+}
+
+const loadVodInfo = async (sourceId: string, vodIdNum: number) => {
+  isLoadingInfo.value = true
+  try {
+    vodInfo.value = await vodInfoService.getVodInfo(sourceId, vodIdNum)
+  } catch (error) {
+    console.error('Failed to load VOD info:', error)
+    // Don't show error for info loading, just log it
+  } finally {
+    isLoadingInfo.value = false
   }
 }
 
@@ -323,12 +390,43 @@ const handlePlay = async (): Promise<void> => {
   await nextTick()
   setTimeout(() => {
     initializePlayer()
-  }, 100)
+  }, VIDEO_INIT_TIMEOUT_MS)
 }
 
-const handleStop = (): void => {
-  cleanupPlayer()
-  isPlaying.value = false
+const formatDuration = (duration: string | number | undefined): string => {
+  if (!duration) return 'N/A'
+  
+  if (typeof duration === 'number') {
+    // Assume duration is in seconds
+    const hours = Math.floor(duration / 3600)
+    const minutes = Math.floor((duration % 3600) / 60)
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`
+    }
+    return `${minutes}m`
+  }
+  
+  if (typeof duration === 'string') {
+    // Try to parse duration string (e.g., "2:30:00" or "150 min")
+    const timeMatch = duration.match(/(\d+):(\d+):(\d+)/)
+    if (timeMatch) {
+      const hours = parseInt(timeMatch[1])
+      const minutes = parseInt(timeMatch[2])
+      if (hours > 0) {
+        return `${hours}h ${minutes}m`
+      }
+      return `${minutes}m`
+    }
+    
+    const minMatch = duration.match(/(\d+)\s*min/i)
+    if (minMatch) {
+      return `${minMatch[1]}m`
+    }
+    
+    return duration
+  }
+  
+  return 'N/A'
 }
 
 const cleanupPlayer = () => {
@@ -340,6 +438,11 @@ const cleanupPlayer = () => {
       console.error('Error disposing video player:', error)
     }
   }
+}
+
+const handleStop = (): void => {
+  cleanupPlayer()
+  isPlaying.value = false
 }
 
 onMounted(() => {
@@ -383,7 +486,7 @@ onUnmounted(() => {
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.8s ease-out forwards;
+  animation: fade-in-up 800ms ease-out forwards;
 }
 
 .delay-100 {

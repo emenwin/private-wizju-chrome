@@ -278,8 +278,24 @@ export async function initDB(): Promise<IDBPDatabase<WizjuDBSchema>> {
         }
       }
 
+      // Version 3: Xtream VOD Info store
+      if (oldVersion < 3) {
+        if (!db.objectStoreNames.contains(STORE_NAMES.XTREAM_VOD_INFO)) {
+          const vodInfoStore = db.createObjectStore(STORE_NAMES.XTREAM_VOD_INFO, {
+            keyPath: 'id',
+          })
+          vodInfoStore.createIndex(INDEX_NAMES.XTREAM_VOD_INFO_BY_SOURCE_ID, 'sourceId')
+          vodInfoStore.createIndex(INDEX_NAMES.XTREAM_VOD_INFO_BY_VOD_ID, 'vodId')
+          vodInfoStore.createIndex(INDEX_NAMES.XTREAM_VOD_INFO_BY_SOURCE_AND_VOD_ID, [
+            'sourceId',
+            'vodId',
+          ])
+          console.log('[IndexedDB] Created xtreamVodInfo store with indexes')
+        }
+      }
+
       // Future version upgrades can be added here
-      // if (oldVersion < 2) { ... }
+      // if (oldVersion < 4) { ... }
     },
 
     blocked(currentVersion, blockedVersion) {

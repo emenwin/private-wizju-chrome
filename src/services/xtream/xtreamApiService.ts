@@ -87,6 +87,49 @@ interface XtreamSeriesInfoResponse {
   episodes?: Record<string, XtreamSeriesInfoEpisodeResponse[]>
 }
 
+interface XtreamVodInfoResponse {
+  info?: {
+    kinopoisk_url?: string
+    tmdb_id?: string
+    name?: string
+    o_name?: string
+    original_name?: string
+    cover_big?: string
+    movie_image?: string
+    releasedate?: string
+    release_date?: string
+    episode_run_time?: number
+    youtube_trailer?: string
+    director?: string
+    actors?: string
+    cast?: string
+    description?: string
+    plot?: string
+    age?: string
+    mpaa_rating?: string
+    rating_count_kinopoisk?: number
+    country?: string
+    genre?: string
+    backdrop_path?: string[]
+    duration_secs?: number
+    duration?: string
+    bitrate?: number
+    rating?: number
+  }
+  movie_data?: {
+    stream_id?: number
+    name?: string
+    title?: string
+    year?: string
+    added?: string
+    category_id?: string
+    category_ids?: number[]
+    container_extension?: string
+    custom_sid?: string
+    direct_source?: string
+  }
+}
+
 const ACTIONS: Record<XtreamCategoryType, string> = {
   livestream: 'get_live_categories',
   vod: 'get_vod_categories',
@@ -222,6 +265,21 @@ export const xtreamApiService = {
     }
     return (await response.json()) as XtreamSeriesInfoResponse
   },
+  fetchVodInfo: async (
+    baseUrl: string,
+    username: string,
+    password: string,
+    vodId: number,
+  ): Promise<XtreamVodInfoResponse> => {
+    const url = buildXtreamApiUrlWithParams(baseUrl, username, password, 'get_vod_info', {
+      vod_id: vodId,
+    })
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Xtream API request failed: ${response.status} ${response.statusText}`)
+    }
+    return (await response.json()) as XtreamVodInfoResponse
+  },
 }
 
 export type {
@@ -232,4 +290,5 @@ export type {
   XtreamSeriesInfoResponse,
   XtreamSeriesInfoSeasonResponse,
   XtreamSeriesInfoEpisodeResponse,
+  XtreamVodInfoResponse,
 }
