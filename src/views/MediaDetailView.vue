@@ -1,200 +1,234 @@
 <template>
-  <div class="min-h-screen bg-stream-bg">
-    <!-- Floating Header -->
-    <div
-      class="fixed top-10 left-0 right-0 z-50 px-3 py-0 bg-stream-bg/95 backdrop-blur-sm border-b border-stream-border/50"
+  <div class="min-h-screen bg-stream-bg relative">
+    <!-- Navigation Header (Floating/Sticky) -->
+    <header
+      class="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      :class="[
+        isScrolled 
+          ? 'bg-stream-bg/95 backdrop-blur-md shadow-sm py-2' 
+          : 'bg-transparent py-4 bg-gradient-to-b from-black/50 to-transparent'
+      ]"
+      style="padding-top: max(env(safe-area-inset-top), 16px)"
     >
-      <Button @click="navigationService.goBack()" variant="ghost" class="mb-4">
-        <ArrowLeft class="w-4 h-4 mr-2" />
-        Back
-      </Button>
-    </div>
-
-    <!-- Media Detail Content -->
-    <div class="p-6 pt-24 md:pt-20">
-      <div class="w-full lg:w-3/4">
-        <!-- Loading state -->
-        <div v-if="isLoading" class="flex flex-col items-center justify-center py-12 space-y-4">
-          <div class="w-12 h-12 border-4 border-stream-accent border-t-transparent rounded-full animate-spin"></div>
-          <p class="text-stream-text-muted">Loading media details...</p>
+      <div class="px-4 md:px-6 flex items-center justify-between">
+        <!-- Back Button -->
+        <Button 
+          @click="navigationService.goBack()" 
+          variant="ghost" 
+          size="icon"
+          class="rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200"
+          :class="
+            isScrolled 
+              ? 'hover:bg-stream-text/10 text-stream-text' 
+              : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-md border border-white/10'
+          "
+          title="Go Back"
+        >
+          <ArrowLeft class="w-5 h-5" />
+        </Button>
+        
+        <!-- Title in header (scales in when scrolled) -->
+        <div 
+          class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[50%] transition-opacity duration-300"
+          :class="isScrolled ? 'opacity-100' : 'opacity-0'"
+          style="padding-top: max(env(safe-area-inset-top), 16px)"
+        >
+           <span class="font-semibold text-stream-text truncate block text-sm md:text-base">
+             {{ media?.title }}
+           </span>
         </div>
 
-        <div v-else-if="!media" class="text-center py-12">
-          <h2 class="text-xl font-semibold text-stream-text mb-4">Media not found</h2>
-          <Button @click="navigationService.goBack()" variant="outline">
-            <ArrowLeft class="w-4 h-4 mr-2" />
-            Go Back
+        <!-- Right Actions -->
+        <div class="flex items-center gap-2">
+           <Button
+            @click="handleToggleFavorite"
+            variant="ghost"
+            size="icon"
+            class="rounded-full w-10 h-10 flex items-center justify-center transition-all duration-200"
+            :class="
+              (isScrolled 
+                ? 'hover:bg-stream-text/10 ' 
+                : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-md border border-white/10 ') +
+              (isFavorite ? 'text-red-500' : (isScrolled ? 'text-stream-text' : 'text-white'))
+            "
+            :title="isFavorite ? 'Remove from Favorites' : 'Add to Favorites'"
+          >
+            <Heart :class="['w-5 h-5', isFavorite ? 'fill-current' : '']" />
           </Button>
         </div>
+      </div>
+    </header>
 
-        <div v-else class="space-y-8">
-          <!-- Video Player -->
-          <div class="w-full">
-            <Card class="overflow-hidden bg-stream-surface border-stream-border">
-              <div class="p-0">
-                <div class="relative aspect-video max-h-[50vh] sm:max-h-none" id="video-container">
-                  <!-- Video Player -->
-                  <div v-if="isPlaying" class="w-full h-full">
-                    <video
-                      ref="videoPlayer"
-                      class="video-js vjs-default-skin w-full h-full"
-                      controls
-                      preload="auto"
-                      data-setup="{}"
-                    />
-                  </div>
+    <!-- Loading State -->
+    <div v-if="isLoading" class="flex flex-col items-center justify-center min-h-screen space-y-4">
+      <div class="w-12 h-12 border-4 border-stream-accent border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-stream-text-muted">Loading media...</p>
+    </div>
 
-                  <!-- Thumbnail/Poster -->
-                  <div v-else class="relative w-full h-full bg-black">
-                    <!-- Display thumbnail (if available and not failed to load) -->
-                    <img
-                      v-if="media.thumbnail && !imageLoadError"
-                      :src="media.thumbnail"
-                      :alt="media.title"
-                      class="w-full h-full object-contain"
-                      @error="handleImageError"
-                    />
+    <!-- Error State -->
+    <div v-else-if="!media" class="flex flex-col items-center justify-center min-h-screen space-y-6">
+       <h2 class="text-2xl font-semibold text-stream-text">Media not found</h2>
+        <Button @click="navigationService.goBack()" variant="outline">
+          <ArrowLeft class="w-4 h-4 mr-2" />
+          Go Back
+        </Button>
+    </div>
 
-                    <!-- Default placeholder (when no thumbnail or failed to load) -->
-                    <div
-                      v-if="!media.thumbnail || imageLoadError"
-                      class="w-full h-full flex items-center justify-center bg-stream-surface/50"
-                    >
-                      <div class="text-center">
-                        <Play
-                          class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-stream-text-muted"
-                        />
-                        <p class="text-stream-text-muted text-xs sm:text-sm">
-                          No thumbnail available
-                        </p>
-                      </div>
-                    </div>
+    <!-- Content -->
+    <div v-else class="pb-20 pt-24 md:pt-28 px-6 md:px-12 lg:px-16 space-y-8">
+      
+      <!-- Top Info Section (Title + Meta) -->
+      <div class="max-w-5xl animate-fade-in-up">
+          <div class="flex flex-col md:flex-row md:items-end gap-x-6 gap-y-4">
+            <!-- Title -->
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-stream-text tracking-tight leading-none font-display">
+              {{ media.title }}
+            </h1>
 
-                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <Button
-                        @click="handlePlay"
-                        size="lg"
-                        class="bg-gradient-primary hover:bg-stream-accent-hover"
-                      >
-                        <Play class="w-6 h-6 mr-2" />
-                        Play Now
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
+            <!-- Meta Tags (Now side-by-side with title on large screens) -->
+            <div class="flex flex-wrap items-center gap-3 text-sm font-medium tracking-wide pb-2">
+               <span class="bg-stream-accent/10 border border-stream-accent/20 text-stream-accent px-2.5 py-0.5 rounded-full text-xs uppercase shadow-sm whitespace-nowrap">
+                {{ media.type }}
+               </span>
+               <span v-if="media.year" class="text-stream-text-muted font-semibold whitespace-nowrap">{{ media.year }}</span>
+               <div v-if="media.rating" class="flex items-center text-yellow-500 gap-1 font-semibold whitespace-nowrap">
+                 <Star class="w-3.5 h-3.5 fill-current" /> {{ media.rating }}
+               </div>
+               <span v-if="media.genre" class="text-stream-text-muted px-2 border-l border-stream-border/30 whitespace-nowrap">{{ media.genre }}</span>
+            </div>
           </div>
+      </div>
 
-          <!-- Media Information -->
-          <div class="grid lg:grid-cols-2 gap-8">
-            <!-- Left Column: Basic Info and Actions -->
-            <div class="space-y-6">
-              <div class="space-y-3">
-                <div class="flex items-center gap-2">
-                  <div class="bg-stream-accent text-white text-xs px-2 py-1 rounded">
-                    {{ media.type.toUpperCase() }}
-                  </div>
-                  <div
-                    v-if="media.genre"
-                    class="border border-stream-border text-stream-text-muted text-xs px-2 py-1 rounded"
-                  >
-                    {{ media.genre }}
-                  </div>
-                </div>
-
-                <h1 class="text-3xl font-bold text-stream-text">
-                  {{ media.title }}
-                </h1>
-
-                <p class="text-lg text-stream-text-muted">
-                  {{ media.description }}
-                </p>
-              </div>
-
-              <!-- Action Buttons -->
-              <div class="flex gap-3">
-                <Button
-                  v-if="!isPlaying"
-                  @click="handlePlay"
-                  class="bg-gradient-primary hover:bg-stream-accent-hover flex-1"
-                >
-                  <Play class="w-4 h-4 mr-2" />
-                  Play
-                </Button>
-                <Button
-                  v-else
-                  @click="handleStop"
-                  variant="outline"
-                  class="border-stream-border flex-1"
-                >
-                  Stop
-                </Button>
-                <Button
-                  @click="handleToggleFavorite"
-                  variant="outline"
-                  class="border-stream-border"
-                  :class="
-                    isFavorite
-                      ? 'bg-red-500/10 border-red-500 text-red-500 hover:bg-red-500/20'
-                      : 'hover:bg-stream-accent/10'
-                  "
-                >
-                  <Heart :class="['w-4 h-4 mr-2', isFavorite ? 'fill-current' : '']" />
-                  {{ isFavorite ? 'Remove from Favorites' : 'Add to Favorites' }}
-                </Button>
-              </div>
-            </div>
-
-            <!-- Right Column: Stats and Additional Info -->
-            <div class="space-y-6">
-              <!-- Media Stats -->
-              <div class="grid grid-cols-2 gap-4">
-                <div v-if="media.rating" class="flex items-center space-x-2">
-                  <Star class="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                  <span class="text-stream-text font-medium">{{ media.rating }}</span>
-                  <span class="text-stream-text-muted">/10</span>
-                </div>
-
-                <div v-if="media.year" class="flex items-center space-x-2">
-                  <Calendar class="w-5 h-5 text-stream-text-muted" />
-                  <span class="text-stream-text">{{ media.year }}</span>
-                </div>
-
-                <div v-if="media.duration" class="flex items-center space-x-2">
-                  <Clock class="w-5 h-5 text-stream-text-muted" />
-                  <span class="text-stream-text">{{ media.duration }}</span>
-                </div>
-
-                <div v-if="media.timeRemaining" class="flex items-center space-x-2">
-                  <Clock class="w-5 h-5 text-stream-accent" />
-                  <span class="text-stream-text">{{ media.timeRemaining }}</span>
-                </div>
-              </div>
-
-              <!-- Additional Info -->
-              <Card class="bg-stream-surface border-stream-border">
-                <div class="p-4">
-                  <h3 class="font-semibold text-stream-text mb-2">About</h3>
-                  <p class="text-stream-text-muted text-sm">Category: {{ media.category }}</p>
-                  <p class="text-stream-text-muted text-sm">Type: {{ media.type }}</p>
-                  <p v-if="media.url" class="text-stream-text-muted text-sm">
-                    <span class="block mb-1">Source:</span>
-                    <span class="block break-all">{{ media.url }}</span>
-                  </p>
-                </div>
-              </Card>
-            </div>
+      <!-- Video Player / Backdrop Section -->
+      <div class="relative w-full aspect-video md:aspect-[21/9] max-h-[700px] overflow-hidden rounded-2xl shadow-2xl bg-black border border-stream-border/50 group">
+        
+        <!-- Background Image (Backdrop) -->
+        <div 
+          v-if="!isPlaying"
+          class="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
+          :style="{ backgroundImage: `url(${media.thumbnail})` }"
+        >
+          <!-- Subtle overlay for depth -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+          
+          <!-- Large Play Button Overlay -->
+          <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
+              <button 
+                @click="handlePlay"
+                class="bg-white/20 hover:bg-stream-accent text-white p-6 rounded-full backdrop-blur-md transition-all transform scale-100 group-hover:scale-110 shadow-2xl"
+              >
+                <Play class="w-12 h-12 fill-current ml-1" />
+              </button>
           </div>
         </div>
+
+        <!-- Video Player Overlay (When Playing) -->
+        <div v-if="isPlaying" class="absolute inset-0 z-20 bg-black animate-fade-in">
+           <video
+              ref="videoPlayer"
+              class="video-js vjs-theme-forest w-full h-full"
+              controls
+              preload="auto"
+              data-setup="{}"
+            />
+             <!-- Close Player Button -->
+             <button 
+              @click="handleStop"
+              class="absolute top-6 right-6 z-50 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-md transition-all border border-white/10 hover:scale-105"
+             >
+               <X class="w-6 h-6" />
+             </button>
+        </div>
       </div>
+
+      <!-- Details Section (Below fold) -->
+      <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 pt-8">
+           <!-- Main Info (Left) - Actions & Description -->
+           <div class="lg:col-span-8 space-y-10 animate-fade-in-up delay-100">
+              
+              <!-- Actions -->
+              <div class="flex items-center gap-5">
+                 <Button
+                  @click="handlePlay"
+                  size="lg"
+                  class="bg-stream-accent hover:bg-stream-accent-hover text-white rounded-full px-8 py-6 text-lg font-bold shadow-xl shadow-stream-accent/20 transition-all transform hover:scale-105 active:scale-95 group"
+                >
+                  <Play class="w-6 h-6 mr-3 fill-current group-hover:scale-110 transition-transform" />
+                  Watch Now
+                </Button>
+                 <Button
+                  @click="handleToggleFavorite"
+                  variant="outline"
+                  size="lg"
+                  class="rounded-full px-6 py-6 border-stream-border hover:bg-stream-surface text-stream-text transition-all hover:border-stream-text-muted/50"
+                >
+                  <component :is="isFavorite ? Heart : Heart" :class="['w-6 h-6', isFavorite ? 'fill-red-500 text-red-500' : '']" />
+                </Button>
+              </div>
+
+              <div class="prose prose-invert max-w-none border-t border-stream-border/30 pt-8">
+                <h3 class="text-2xl font-bold text-stream-text mb-4">Synopsis</h3>
+                <p class="text-stream-text-muted leading-relaxed text-lg lg:text-xl font-light">
+                  {{ media.description || 'No description available for this content.' }}
+                </p>
+              </div>
+              <div v-if="media.category" class="pt-8 border-t border-stream-border/30">
+                <h3 class="text-sm font-semibold text-stream-text-muted uppercase tracking-wider mb-4">Category / Tags</h3>
+                 <div class="flex flex-wrap gap-2">
+                    <span class="bg-stream-surface hover:bg-stream-surface-hover border border-stream-border hover:border-stream-text-muted/50 px-4 py-1.5 rounded-full text-sm text-stream-text transition-all cursor-default">
+                      {{ media.category }}
+                    </span>
+                 </div>
+              </div>
+           </div>
+
+           <!-- Sidebar Meta (Right) -->
+           <div class="lg:col-span-4 space-y-6 animate-fade-in-up delay-200">
+              <Card class="bg-stream-surface/30 border-stream-border/40 backdrop-blur-xl p-8 space-y-5 rounded-2xl shadow-lg">
+                 <h4 class="text-lg font-semibold text-stream-text mb-2">Details</h4>
+                 
+                 <div class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
+                    <span class="text-stream-text-muted flex items-center gap-3"><Clock class="w-4 h-4 text-stream-accent/80"/> Duration</span>
+                    <span class="text-stream-text font-medium">{{ media.duration || 'N/A' }}</span>
+                 </div>
+                 <div class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
+                    <span class="text-stream-text-muted flex items-center gap-3"><Calendar class="w-4 h-4 text-stream-accent/80"/> Release Year</span>
+                    <span class="text-stream-text font-medium">{{ media.year || 'N/A' }}</span>
+                 </div>
+                 <div class="flex items-center justify-between py-3 border-b border-stream-border/30 group hover:border-stream-border/60 transition-colors">
+                    <span class="text-stream-text-muted flex items-center gap-3"><Star class="w-4 h-4 text-yellow-500"/> Rating</span>
+                    <span class="text-stream-text font-medium">{{ media.rating || 'N/A' }}/10</span>
+                 </div>
+                 
+                 <div v-if="media.timeRemaining" class="mt-6 p-4 bg-stream-accent/10 border border-stream-accent/20 rounded-xl flex items-center gap-4">
+                    <div class="p-2 bg-stream-accent/20 rounded-full text-stream-accent">
+                       <Clock class="w-5 h-5" />
+                    </div>
+                     <div>
+                       <div class="text-xs text-stream-text-muted uppercase tracking-wide">Time Remaining</div>
+                       <div class="text-base font-bold text-stream-accent">{{ media.timeRemaining }}</div>
+                     </div>
+                 </div>
+              </Card>
+
+              <!-- Technical Info (Collapsible style but kept open for now) -->
+               <div v-if="media.url" class="group">
+                  <div class="p-5 rounded-xl border border-stream-border/30 bg-stream-surface/20 text-xs overflow-hidden transition-all hover:bg-stream-surface/40">
+                      <div class="uppercase tracking-widest text-stream-text-muted mb-2 font-semibold">Source URL</div>
+                      <div class="text-stream-text font-mono break-all opacity-70 group-hover:opacity-100 transition-opacity">
+                        {{ media.url }}
+                      </div>
+                  </div>
+              </div>
+           </div>
+        </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { ArrowLeft, Play, Star, Clock, Calendar, Heart } from 'lucide-vue-next'
+import { ArrowLeft, Play, Star, Clock, Calendar, Heart, X } from 'lucide-vue-next'
 import Card from '@/components/ui/UiCard.vue'
 import Button from '@/components/ui/UiButton.vue'
 import { useNavigationStore } from '@/stores/navigation'
@@ -204,6 +238,7 @@ import { favoritesService } from '@/services/favoritesService'
 import type { M3UMediaItem } from '@/types/stream'
 import videojs from 'video.js'
 import 'video.js/dist/video-js.css'
+import '@videojs/themes/dist/forest/index.css'
 import '@videojs/http-streaming'
 
 const navigationStore = useNavigationStore()
@@ -216,10 +251,15 @@ const videoPlayer = ref<HTMLVideoElement | null>(null)
 const imageLoadError = ref(false)
 let player: ReturnType<typeof videojs> | null = null
 
-// Favorite state - use a reactive ref instead of computed
+// Scroll state for header
+const isScrolled = ref(false)
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 50
+}
+
+// Favorite state
 const isFavorite = ref(false)
 
-// Update favorite status
 const updateFavoriteStatus = async () => {
   if (!media.value || !navigationStore.currentSourceId) {
     isFavorite.value = false
@@ -228,62 +268,31 @@ const updateFavoriteStatus = async () => {
   isFavorite.value = await favoritesService.isFavorite(media.value.id, navigationStore.currentSourceId)
 }
 
-// Toggle favorite status
 const handleToggleFavorite = async () => {
   if (!media.value || !navigationStore.currentSourceId) return
-
   const success = await favoritesService.toggleFavorite(media.value, navigationStore.currentSourceId)
   if (success) {
-    // Manually update the reactive state
     await updateFavoriteStatus()
-    const action = isFavorite.value ? 'added to' : 'removed from'
-    console.log(`Media ${action} favorites:`, media.value.title)
   }
 }
 
-// Load media from the navigation store
 const loadMedia = async () => {
   isLoading.value = true
   try {
-    console.log('Loading media from navigation store')
-
-    // // No need to validate the current navigation state
-    // const sourceValidation = navigationStore.validateCurrentSource()
-    // if (!sourceValidation.isValid) {
-    //   console.error('No valid current source:', sourceValidation.error)
-    //   media.value = null
-    //   return
-    // }
-
-    // Validate the current MediaItem
     const mediaValidation = navigationStore.validateCurrentMediaItem()
     if (!mediaValidation.isValid) {
-      console.error('No valid current media item:', mediaValidation.error)
       media.value = null
       return
     }
-
-    // Get the current MediaItem directly from the navigation store
     media.value = navigationStore.currentMediaItem
-    console.log('Media loaded from navigation store:', media.value)
-
-    // Reset image load error state
     imageLoadError.value = false
-
-    // Initialize favorite status
     await updateFavoriteStatus()
-
-    // After successfully loading the media, add it to the recent watching list
+    
     if (media.value && navigationStore.currentSourceId) {
-      try {
-        recentWatchingService.addToRecentWatching({
+       recentWatchingService.addToRecentWatching({
           mediaItem: media.value,
           sourceId: navigationStore.currentSourceId,
-        })
-        console.log('Added to recent watching:', media.value.title)
-      } catch (error) {
-        console.error('Failed to add to recent watching:', error)
-      }
+        }).catch(console.error)
     }
   } catch (error) {
     console.error('Failed to load media:', error)
@@ -296,7 +305,6 @@ const initializePlayer = async () => {
   if (!videoPlayer.value || !media.value?.url) return
 
   try {
-    // Initialize the video.js player
     player = videojs(videoPlayer.value, {
       controls: true,
       responsive: true,
@@ -304,14 +312,12 @@ const initializePlayer = async () => {
       fill: true,
       preload: 'auto',
       autoplay: true,
-      sources: [
-        {
-          src: media.value.url,
-          type: getVideoType(media.value.url),
-        },
-      ],
+      sources: [{
+        src: media.value.url,
+        type: getVideoType(media.value.url),
+      }],
       playbackRates: [0.5, 1, 1.25, 1.5, 2],
-      html5: {
+       html5: {
         hls: {
           enableLowInitialPlaylist: true,
           smoothQualityChange: true,
@@ -319,24 +325,10 @@ const initializePlayer = async () => {
         },
       },
     })
-
-    player.ready(() => {
-      console.log('Video.js player is ready')
-      console.log('Playing URL:', media.value?.url)
-    })
-
-    player.on('error', (error: Error) => {
+    
+    player.on('error', (error: unknown) => {
       console.error('Video.js error:', error)
-      console.error('Error details:', player?.error())
-      alert('Failed to load video. Please check the stream URL.')
-    })
-
-    player.on('loadstart', () => {
-      console.log('Video load started')
-    })
-
-    player.on('canplay', () => {
-      console.log('Video can start playing')
+      alert('Failed to load video.')
     })
   } catch (error) {
     console.error('Failed to initialize video player:', error)
@@ -347,36 +339,18 @@ const getVideoType = (url: string): string => {
   if (url.includes('.m3u8')) return 'application/x-mpegURL'
   if (url.includes('.mp4')) return 'video/mp4'
   if (url.includes('.webm')) return 'video/webm'
-  if (url.includes('.ogg')) return 'video/ogg'
-  // Default to HLS type, suitable for most IPTV streams
   return 'application/x-mpegURL'
 }
 
 const handlePlay = async (): Promise<void> => {
-  if (!media.value?.url) {
-    alert('No video URL available')
-    return
-  }
-
-  // Check if the URL is a mock URL
+  if (!media.value?.url) return
   if (media.value.url.startsWith('mock://')) {
-    alert('This is a mock URL. Please configure real streaming sources to play actual content.')
+    alert('This is a mock URL.')
     return
   }
-
-  console.log('Playing media:', media.value?.title)
-  console.log('Media URL:', media.value?.url)
-  console.log('Video type:', getVideoType(media.value.url))
-
   isPlaying.value = true
-
-  // Wait for the DOM to update
   await nextTick()
-
-  // Initialize the player
-  setTimeout(() => {
-    initializePlayer()
-  }, 100)
+  setTimeout(() => initializePlayer(), 100)
 }
 
 const handleStop = (): void => {
@@ -384,29 +358,58 @@ const handleStop = (): void => {
   isPlaying.value = false
 }
 
-const handleImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement
-  console.warn('Thumbnail failed to load:', target.src)
-  // Set the image load failed state
-  imageLoadError.value = true
-}
-
 const cleanupPlayer = () => {
   if (player) {
     try {
       player.dispose()
       player = null
-    } catch (error) {
-      console.error('Error disposing video player:', error)
+    } catch (e) {
+      console.error(e)
     }
   }
 }
 
 onMounted(() => {
+  window.addEventListener('scroll', handleScroll)
   loadMedia()
 })
 
 onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
   cleanupPlayer()
 })
 </script>
+
+<style scoped>
+.h-safe-top {
+  height: env(safe-area-inset-top, 20px);
+}
+
+/* Enhancements for VideoJS theme if needed */
+:deep(.video-js .vjs-big-play-button) {
+  top: 50%;
+  left: 50%;
+  border: none;
+  background: rgba(var(--stream-accent), 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  width: 2em;
+  height: 2em;
+  line-height: 2em;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out forwards;
+}
+</style>

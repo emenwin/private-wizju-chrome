@@ -31,7 +31,7 @@
     <!-- Layout for pages that do not require a sidebar -->
     <div v-else class="flex h-screen">
       <main class="flex-1 min-h-screen">
-        <PageNavigation />
+        <PageNavigation v-if="!hidePageNavigation" />
         <RouterView />
       </main>
       <aside class="hidden xl:block w-80 h-screen border-stream-border">
@@ -69,6 +69,10 @@ const sidebarRoutes = ['Home', 'Live', 'Films', 'Series', 'Settings']
 // Calculate whether to show the sidebar
 const showSidebar = computed(() => {
   return sidebarRoutes.includes(route.name as string)
+})
+
+const hidePageNavigation = computed(() => {
+  return route.name === 'MediaDetail'
 })
 
 // Check if migration is needed and initialize the app
