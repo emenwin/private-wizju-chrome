@@ -278,7 +278,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue'
 import { RefreshCw, Trash2 } from 'lucide-vue-next'
 import { cn } from '@/utils/cn'
 import ChannelCard from '@/components/media/ChannelCard.vue'
@@ -558,6 +558,81 @@ const updateContainerHeight = () => {
 
 const debouncedUpdateContainerHeight = debounce(updateContainerHeight, 250)
 
+const handleResize = () => {
+  debouncedUpdateContainerHeight()
+  setTimeout(updateScrollIndicators, 50)
+}
+
+const handleOrientationChange = () => {
+  setTimeout(() => {
+    updateContainerHeight()
+    updateScrollIndicators()
+  }, 300)
+}
+
+const handleKeyPress = (e: KeyboardEvent) => {
+  if (!isDev) return
+
+  if (e.ctrlKey && e.shiftKey) {
+    switch (e.key) {
+      case 'D':
+        console.log('Virtual Scroll Debug Info:', {
+          shouldUseVirtualScroll: shouldUseVirtualScroll.value,
+          filteredChannelsCount: filteredChannels.value.length,
+          itemsPerRow: itemsPerRow.value,
+          containerHeight: containerHeight.value,
+          hasCurrentSource: hasCurrentSource.value,
+        })
+        break
+      case 'R':
+        if (virtualGridRef.value) {
+          virtualGridRef.value.scrollToTop()
+        }
+        break
+      case 'U':
+        updateContainerHeight()
+        break
+    }
+  }
+}
+
+let windowListenersAttached = false
+
+const attachWindowListeners = () => {
+  if (windowListenersAttached || typeof window === 'undefined') return
+
+  updateContainerHeight()
+  setTimeout(() => {
+    updateScrollIndicators()
+  }, 100)
+
+  window.addEventListener('resize', handleResize, { passive: true })
+
+  if ('screen' in window && 'orientation' in screen) {
+    window.addEventListener('orientationchange', handleOrientationChange, { passive: true })
+  }
+
+  if (isDev) {
+    window.addEventListener('keydown', handleKeyPress)
+  }
+
+  windowListenersAttached = true
+}
+
+const detachWindowListeners = () => {
+  if (!windowListenersAttached || typeof window === 'undefined') return
+
+  window.removeEventListener('resize', handleResize)
+  if ('screen' in window && 'orientation' in screen) {
+    window.removeEventListener('orientationchange', handleOrientationChange)
+  }
+  if (isDev) {
+    window.removeEventListener('keydown', handleKeyPress)
+  }
+
+  windowListenersAttached = false
+}
+
 const handleChannelClick = (channel: Channel): void => {
   console.log('Playing channel:', channel.title, 'from source:', currentSource.value?.name)
 
@@ -651,82 +726,19 @@ onMounted(async () => {
     isLoading.value = false
   }
 
-  // Update container height on mount
-  updateContainerHeight()
+  attachWindowListeners()
+})
 
-  // Update scroll indicators after a short delay
-  setTimeout(() => {
-    updateScrollIndicators()
-  }, 100) // Delay to ensure DOM is rendered
+onActivated(() => {
+  attachWindowListeners()
+})
 
-  // Add resize listener
-  window.addEventListener('resize', debouncedUpdateContainerHeight, { passive: true })
+onDeactivated(() => {
+  detachWindowListeners()
+})
 
-  // Combined resize handler
-  const handleResize = () => {
-    debouncedUpdateContainerHeight()
-    setTimeout(updateScrollIndicators, 50)
-  }
-  window.addEventListener('resize', handleResize, { passive: true })
-
-  // Orientation change handler
-  if ('screen' in window && 'orientation' in screen) {
-    window.addEventListener(
-      'orientationchange',
-      () => {
-        // Delay update to wait for layout to stabilize
-        setTimeout(() => {
-          updateContainerHeight()
-          updateScrollIndicators()
-        }, 300)
-      },
-      { passive: true },
-    )
-  }
-
-  // Debugging shortcuts in development environment
-  if (isDev) {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey) {
-        switch (e.key) {
-          case 'D':
-            // Ctrl+Shift+D: Toggle debug info
-            console.log('Virtual Scroll Debug Info:', {
-              shouldUseVirtualScroll: shouldUseVirtualScroll.value,
-              filteredChannelsCount: filteredChannels.value.length,
-              itemsPerRow: itemsPerRow.value,
-              containerHeight: containerHeight.value,
-              hasCurrentSource: hasCurrentSource.value,
-            })
-            break
-          case 'R':
-            // Ctrl+Shift+R: Reset virtual scroll
-            if (virtualGridRef.value) {
-              virtualGridRef.value.scrollToTop()
-            }
-            break
-          case 'U':
-            // Ctrl+Shift+U: Manually update layout
-            updateContainerHeight()
-            break
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyPress)
-
-    const cleanup = () => {
-      window.removeEventListener('keydown', handleKeyPress)
-      window.removeEventListener('resize', debouncedUpdateContainerHeight)
-      window.removeEventListener('orientationchange', updateContainerHeight)
-    }
-    onUnmounted(cleanup)
-  } else {
-    // Cleanup for production environment
-    onUnmounted(() => {
-      window.removeEventListener('resize', debouncedUpdateContainerHeight)
-      window.removeEventListener('orientationchange', updateContainerHeight)
-    })
-  }
+onUnmounted(() => {
+  detachWindowListeners()
 })
 </script>
 

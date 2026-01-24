@@ -27,12 +27,14 @@ const routes: RouteRecordRaw[] = [
     path: '/live',
     name: 'Live',
     component: () => import('@/views/m3u/LiveView.vue'),
+    meta: { keepAlive: true, keepAliveKey: 'Live' },
   },
  
   {
     path: '/xtream',
     name: 'Xtream',
     component: () => import('@/views/xtream/XtreamView.vue'),
+    meta: { keepAlive: true, keepAliveKey: 'Xtream' },
   },
   {
     path: '/xtream/vod/:id',

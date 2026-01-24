@@ -15,24 +15,24 @@
       </div>
     </Teleport>
 
-    <!-- Layout for pages that require a sidebar -->
-    <div v-if="showSidebar" class="flex h-screen">
-      <StreamSidebar />
-      <main class="flex-1 h-screen overflow-y-auto">
-        <PageNavigation />
-        <RouterView />
-      </main>
-      <aside v-if="!hideAside" class="hidden xl:block w-80 h-screen border-stream-border">
-        <!--*bg-stream-surface border-l* -->
-        <div class="p-4"></div>
-      </aside>
-    </div>
-
-    <!-- Layout for pages that do not require a sidebar -->
-    <div v-else class="flex h-screen">
-      <main class="flex-1 min-h-screen">
-        <PageNavigation v-if="!hidePageNavigation" />
-        <RouterView />
+    <div class="flex h-screen">
+      <StreamSidebar v-if="showSidebar" />
+      <main :class="mainClass">
+        <PageNavigation v-if="showSidebar || !hidePageNavigation" />
+        <RouterView v-slot="{ Component, route: currentRoute }">
+          <KeepAlive>
+            <component
+              :is="Component"
+              v-if="currentRoute.meta?.keepAlive"
+              :key="(currentRoute.meta?.keepAliveKey as string | undefined) ?? (currentRoute.name as string)"
+            />
+          </KeepAlive>
+          <component
+            :is="Component"
+            v-if="!currentRoute.meta?.keepAlive"
+            :key="currentRoute.fullPath"
+          />
+        </RouterView>
       </main>
       <aside v-if="!hideAside" class="hidden xl:block w-80 h-screen border-stream-border">
         <div class="p-4"></div>
@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import { ref, onMounted, computed } from 'vue'
+import { KeepAlive, ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
 import { useStreamSourcesStore } from '@/stores/streamSources'
@@ -69,6 +69,10 @@ const sidebarRoutes = ['Home', 'Live', 'Films', 'Series', 'Settings', 'Xtream']
 // Calculate whether to show the sidebar
 const showSidebar = computed(() => {
   return sidebarRoutes.includes(route.name as string)
+})
+
+const mainClass = computed(() => {
+  return showSidebar.value ? 'flex-1 h-screen overflow-y-auto' : 'flex-1 min-h-screen'
 })
 
 const hidePageNavigation = computed(() => {
