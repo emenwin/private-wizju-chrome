@@ -26,22 +26,13 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/live',
     name: 'Live',
-    component: () => import('@/views/LiveView.vue'),
+    component: () => import('@/views/m3u/LiveView.vue'),
   },
-  {
-    path: '/films',
-    name: 'Films',
-    component: () => import('@/views/FilmsView.vue'),
-  },
-  {
-    path: '/series',
-    name: 'Series',
-    component: () => import('@/views/SeriesView.vue'),
-  },
+ 
   {
     path: '/xtream',
     name: 'Xtream',
-    component: () => import('@/views/XtreamView.vue'),
+    component: () => import('@/views/xtream/XtreamView.vue'),
   },
   {
     path: '/xtream/vod/:id',
@@ -61,7 +52,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/media',
     name: 'MediaDetail',
-    component: () => import('@/views/MediaDetailView.vue'),
+    component: () => import('@/views/m3u/MediaDetailView.vue'),
   },
   {
     path: '/virtual-scroll-demo',

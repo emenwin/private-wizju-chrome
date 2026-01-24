@@ -64,7 +64,7 @@ const showMigrationModal = ref(false)
 const isAppReady = ref(false)
 
 // Define routes that need to display the sidebar
-const sidebarRoutes = ['Home', 'Live', 'Films', 'Series', 'Settings']
+const sidebarRoutes = ['Home', 'Live', 'Films', 'Series', 'Settings', 'Xtream']
 
 // Calculate whether to show the sidebar
 const showSidebar = computed(() => {
